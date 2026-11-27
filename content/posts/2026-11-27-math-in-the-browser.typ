@@ -3,26 +3,33 @@
 #import "/lib/figures.typ": diagram-frame, svg-math
 
 #show: post.with(
-  title: [Math in the browser, straight from Typst],
-  summary: "A test page for MathML output: integrals, aligned systems, matrices, bra-kets and a hand-drawn plot.",
+  title: [A very easily editable blog, with typst],
+  summary: "I created this blog / personal site, so that editing / creating is really easy",
   tags: ("meta", "typst"),
 )
 
+I've been wanting to have a personal site for a long time. I've always been very particular in my choice of tech stack, and I had never found anything that felt perfect, until now! This site ticks every box. 
+
+ - Typst as the content. I've been a fan of typst the moment I heard of it (4 years now!). It is the modern Latex, better in every way, extensible etc.
+ - Static-CMS.  Static sites are great, free to host on many platforms, but there was always some friction to actually producing content. Here I can (and you can) edit in the browser, from anywhere and see it live in the website.
+
+
+
 Every equation on this page is written in Typst and exported as native MathML.
 No JavaScript renders it; the browser does, using the same New Computer Modern
-Math font Typst uses for PDF.
+Math font Typst uses for PDF.#footnote[Firefox has rendered MathML for years; Chromium caught up in version 109, and Safari follows its own WebKit implementation.]
 
 == Inline and display
 
 The Gaussian integral $integral_(-oo)^oo e^(-x^2) dif x = sqrt(pi)$ sits inline,
-and its $n$-dimensional cousin gets its own line:
+and its $n$-dimensional cousin#footnote[Valid for symmetric positive-definite $A$: diagonalise it and the integral factorises into $n$ one-dimensional Gaussians.] gets its own line:
 
 $ integral_(RR^n) e^(-1/2 x^T A x + J^T x) dif^n x
   = sqrt((2 pi)^n / (det A)) thin e^(1/2 J^T A^(-1) J) $
 
 == Aligned systems
 
-Maxwell's equations in differential form:
+Maxwell's equations in differential form:#footnote[In SI units. In Gaussian units the factors of $epsilon_0$ and $mu_0$ give way to powers of $c$.]
 
 $ nabla dot bold(E) &= rho / epsilon_0 \
   nabla dot bold(B) &= 0 \

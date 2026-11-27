@@ -6,10 +6,15 @@
 
 // All page metadata, needs context.
 #let metas() = query(<page-meta>).map(m => m.value)
-#let posts() = metas().filter(m => m.kind == "post" and not m.draft).sorted(key: m => m.date).rev()
+// Drafts only exist in the private drafts build; there they are listed with a badge.
+#let is-draft(m) = m.at("draft", default: false)
+#let posts() = metas().filter(m => m.kind == "post").sorted(key: m => m.date).rev()
 #let notes() = metas().filter(m => m.kind == "note").sorted(key: m => m.at("updated", default: "")).rev()
 
+#let draft-badge(m) = if is-draft(m) { html.span(class: "draft-badge", "draft"); [ ] }
+
 #let post-item(m) = html.li({
+  draft-badge(m)
   html.time(datetime: parse-date(m.date), fmt-date(parse-date(m.date)))
   [ ]
   link(label(m.slug), m.title)
@@ -17,6 +22,7 @@
 })
 
 #let note-item(m) = html.li({
+  draft-badge(m)
   html.span(class: "status " + m.status, m.status)
   [ ]
   link(label(m.slug), m.title)
@@ -53,7 +59,8 @@
 #let xml-escape(s) = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
 
 #let rss() = {
-  let items = posts().slice(0, calc.min(20, posts().len())).map(m => {
+  let ps = posts().filter(m => not is-draft(m))
+  let items = ps.slice(0, calc.min(20, ps.len())).map(m => {
     let d = parse-date(m.date)
     let url = site.url + m.url
     "<item><title>" + xml-escape(m.title-text) + "</title><link>" + url + "</link><guid>" + url + "</guid>" + "<pubDate>" + d.display("[weekday repr:short], [day] [month repr:short] [year] 00:00:00 +0000") + "</pubDate>" + if m.summary != none { "<description>" + xml-escape(m.summary) + "</description>" } else { "" } + "</item>"

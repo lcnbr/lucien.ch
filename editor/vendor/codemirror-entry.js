@@ -23,3 +23,9 @@ export function typst() {
   return new LanguageSupport(new Language(typstLezerLanguageData, parser, [], "typst"),
     [typstLezerIndentService, typstLezerListKeymap, typstLezerFoldService]);
 }
+
+// Language server client (tinymist runs in editor/lsp-worker.js).
+export {
+  LSPClient, LSPPlugin, Workspace, serverCompletion, hoverTooltips, signatureHelp,
+  jumpToDefinition, jumpToDefinitionKeymap,
+} from "@codemirror/lsp-client";

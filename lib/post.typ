@@ -5,14 +5,16 @@
 //     title: [Gauge fixing without tears],
 //     summary: "One sentence for the index and the feed.",
 //     tags: ("qft",),
+//     draft: true,   // optional: only on the private drafts site
 //   )
 #import "base.typ": shell
-#import "state.typ": current
+#import "state.typ": current, check-draft, draft-banner
 #import "util.typ": plain, parse-date, fmt-date
 #import "links.typ": backlinks
 #import "comments.typ": comments
 
 #let post(title: none, summary: none, tags: (), draft: false, body) = context {
+  check-draft(draft)
   let here = current.get()
   let date = if here != none { parse-date(here.date) } else { none }
   [#metadata((
@@ -25,6 +27,7 @@
     draft: draft,
   )) <page-meta>]
   shell(title: plain(title), description: summary, heading: title, kind: "post", {
+    draft-banner(draft)
     html.p(class: "meta", {
       if date != none { html.time(datetime: date, fmt-date(date)) }
       for t in tags { [ ]; html.a(class: "tag", href: "/tags/" + t + "/", "#" + t) }

@@ -11,7 +11,7 @@
     repo: "lcnbr/lucien.ch",
     repo-id: "R_kgDOV-Hg-Q",
     category: "Announcements",
-    category-id: "", // filled in once Discussions are enabled
+    category-id: "DIC_kwDOV-Hg-c4DMHZj",
   ),
   nav: (
     (label: "Blog", target: <blog>),

@@ -42,7 +42,37 @@ jobs:
         with:
           node-version: 22
 
+      # Tinymist (the Typst language server) for the editor, built for the
+      # browser. Building takes ~25 minutes, so the result is cached per
+      # version; bump TINYMIST_VERSION in scripts/build.py to rebuild.
+      - name: Tinymist version
+        id: tinymist
+        run: echo "version=$(sed -n 's/^TINYMIST_VERSION = \"\(.*\)\"/\1/p' scripts/build.py)" >> "$GITHUB_OUTPUT"
+      - name: Cache tinymist
+        id: tinymist-cache
+        uses: actions/cache@v4
+        with:
+          path: tinymist-web
+          key: tinymist-web-${{ steps.tinymist.outputs.version }}
+      - name: Build tinymist for the browser
+        if: steps.tinymist-cache.outputs.cache-hit != 'true'
+        env:
+          VERSION: ${{ steps.tinymist.outputs.version }}
+        run: |
+          git clone --depth 1 --branch "v$VERSION" https://github.com/Myriad-Dreamin/tinymist.git /tmp/tinymist
+          cd /tmp/tinymist
+          rustup show active-toolchain || rustup toolchain install
+          rustup target add wasm32-unknown-unknown
+          curl -sSfL https://rustwasm.github.io/wasm-pack/installer/init.sh | sh
+          cd crates/tinymist
+          wasm-pack build --target web --release -- --no-default-features --features web,no-content-hint
+          mkdir -p "$GITHUB_WORKSPACE/tinymist-web"
+          cp pkg/tinymist.js "$GITHUB_WORKSPACE/tinymist-web/"
+          gzip -9 -c pkg/tinymist_bg.wasm > "$GITHUB_WORKSPACE/tinymist-web/tinymist_bg.wasm.gz"
+
       - name: Build site
+        env:
+          TINYMIST_PKG: tinymist-web
         run: python3 scripts/build.py --search --editor
 
       - uses: actions/upload-artifact@v4
@@ -61,4 +91,25 @@ jobs:
         run: >
           npx --yes wrangler@4 pages deploy dist
           --project-name lucien-ch
+          --branch ${{ github.head_ref || github.ref_name }}
+
+      # Private drafts site: everything above plus pages marked `draft: true`,
+      # behind Cloudflare Access with GitHub login (README, "Drafts"). Its own
+      # Pages project, so nothing from it can end up on the public one. Not
+      # uploaded as an artifact: artifacts of a public repo can be downloaded by
+      # anyone. Team and AUD tag identify the Access application; repo
+      # variables of the same names override them.
+      - name: Build drafts site
+        env:
+          DRAFTS_ACCESS_TEAM: ${{ vars.DRAFTS_ACCESS_TEAM || 'lcnbr' }}
+          DRAFTS_ACCESS_AUD: ${{ vars.DRAFTS_ACCESS_AUD || 'b6de2ac52ff95341df6fa47d2d5fc0d6da17d0a9a4d03871fea2de2de3516283' }}
+        run: python3 scripts/build.py --search --editor --drafts --out dist-drafts
+      - name: Create Cloudflare Pages project for drafts
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: npx --yes wrangler@4 pages project create lucien-ch-drafts --production-branch main || echo "Project already exists (or see the deploy step for errors)."
+      - name: Deploy drafts site to Cloudflare Pages
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: >
+          npx --yes wrangler@4 pages deploy dist-drafts
+          --project-name lucien-ch-drafts
           --branch ${{ github.head_ref || github.ref_name }}
