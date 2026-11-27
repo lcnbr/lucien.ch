@@ -1,0 +1,25 @@
+name: Preview dump (temporary)
+on:
+  push:
+    branches: [preview-build]
+permissions:
+  contents: write
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: |
+          v=$(cat typst-version)
+          curl -sSL "https://github.com/typst/typst/releases/download/v$v/typst-x86_64-unknown-linux-musl.tar.xz" | tar xJ
+          sudo mv typst-x86_64-unknown-linux-musl/typst /usr/local/bin/
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: python3 scripts/build.py --search
+      - run: |
+          cd dist
+          git init -q -b preview-dist
+          git add -A
+          git -c user.name=ci -c user.email=ci@example.com commit -qm "preview build"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" preview-dist
