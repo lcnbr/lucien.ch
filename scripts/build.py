@@ -166,6 +166,11 @@ def build_editor() -> None:
                     snap[rel] = f.read_text(encoding="utf-8")
                 except UnicodeDecodeError:
                     snap[rel] = {"base64": base64.b64encode(f.read_bytes()).decode()}
+    # The branch the editor reads and commits to by default: the one this
+    # site was built from (CI sets GITHUB_HEAD_REF on pull requests).
+    branch = os.environ.get("GITHUB_HEAD_REF") or os.environ.get("GITHUB_REF_NAME") or subprocess.run(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip() or "main"
+    (out / "build.json").write_text(json.dumps({"branch": branch, "built": date.today().isoformat()}))
     (out / "snapshot.json").write_text(json.dumps(
         {"built": date.today().isoformat(), "files": snap}, ensure_ascii=False))
     # Mirror the Typst packages this build used, so the editor works offline

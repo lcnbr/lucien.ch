@@ -17,11 +17,13 @@ const SOURCE_DIRS = ["content/", "lib/", "data/"];
 const TEXT_EXT = /\.(typ|csv|json|toml|ya?ml|bib|txt|md|svg|xml)$/i;
 const VENDOR = new URL("./vendor/", import.meta.url);
 const OFFICIAL_PACKAGES = "https://packages.typst.org";
+let BUILD = { branch: "main" };
 const store = {
   get token() { try { return localStorage.getItem("edit.token") || ""; } catch { return ""; } },
   set token(v) { try { v ? localStorage.setItem("edit.token", v) : localStorage.removeItem("edit.token"); } catch {} },
-  get branch() { try { return localStorage.getItem("edit.branch") || "main"; } catch { return "main"; } },
-  set branch(v) { try { localStorage.setItem("edit.branch", v || "main"); } catch {} },
+  // Default: the branch this site was built from (edit/build.json).
+  get branch() { try { return localStorage.getItem("edit.branch") || BUILD.branch; } catch { return BUILD.branch; } },
+  set branch(v) { try { !v || v === BUILD.branch ? localStorage.removeItem("edit.branch") : localStorage.setItem("edit.branch", v); } catch {} },
   draft(path, text) {
     try { text === undefined ? localStorage.removeItem("edit.draft:" + path) : localStorage.setItem("edit.draft:" + path, text); } catch {}
   },
@@ -55,8 +57,10 @@ let stage = "", stageT0 = 0, stageNote = "";
 function step(label, note = "") {
   const now = performance.now();
   if (stage) console.info(`[edit] ${stage}: ${Math.round(now - stageT0)} ms`);
+  const wasShowing = stage && ui.status.textContent.startsWith(stage);
   stage = label; stageT0 = now; stageNote = note;
   if (label) setStatus(label + (note ? " " + note : "") + "…", "busy");
+  else if (wasShowing) setStatus(compiled ? "Ready" : "Waiting for the page…", compiled ? "" : "busy");
 }
 setInterval(() => {
   if (!stage) return;
@@ -82,6 +86,8 @@ const repoPath = p => `/repos/${REPO.owner}/${REPO.repo}${p}`;
 async function loadTree() {
   const r = await gh(repoPath(`/git/trees/${encodeURIComponent(store.branch)}?recursive=1`));
   const tree = (await r.json()).tree.filter(e => e.type === "blob" && SOURCE_DIRS.some(d => e.path.startsWith(d)));
+  if (!tree.some(e => e.path.startsWith("content/") && e.path.endsWith(".typ")))
+    throw new Error(`branch "${store.branch}" has no pages in content/ yet`);
   for (const e of tree) files.set(e.path, { sha: e.sha, loaded: false });
 }
 
@@ -381,7 +387,7 @@ $("settings-dialog").addEventListener("close", async () => {
   if (v === "forget") { store.token = ""; setStatus("Token removed from this browser"); }
   if (v !== "ok") return;
   const branchChanged = $("branch").value.trim() !== store.branch;
-  store.token = $("token").value.trim(); store.branch = $("branch").value.trim() || "main";
+  store.token = $("token").value.trim(); store.branch = $("branch").value.trim() || BUILD.branch;
   if (branchChanged) location.reload(); else refreshDirty();
 });
 
@@ -453,11 +459,15 @@ window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault()
     setStatus("Typst compiler failed to start: " + e.message + (backendName() === "none" ? " (this browser lacks the features it needs; try a recent Chrome, Edge or Firefox)" : ""), "error");
     return false;
   });
+  try { const r = await fetch(new URL("./build.json", import.meta.url)); if (r.ok) BUILD = { ...BUILD, ...(await r.json()) }; } catch {}
+  let fallbackReason = "";
   try {
     if (!stage) setStatus("Reading the repository…", "busy");
     await loadTree();
   } catch (e) {
     files.clear();
+    fallbackReason = e.message;
+    console.warn("[edit] can't use GitHub, using the built-in copy:", e);
     try { await loadSnapshot(); }
     catch {
       setStatus(e.status === 404 || e.status === 401 ? "Can't read the repository: add a GitHub token (⚙)" : "Can't reach GitHub: " + e.message, "error");
@@ -470,10 +480,15 @@ window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault()
   await Promise.all([...files.keys()].filter(p => p.startsWith("lib/") || p.startsWith("data/")).map(loadFile));
   const wanted = hashPath();
   const first = files.has(wanted) ? wanted : ui.file.options[0] && ui.file.options[0].value;
-  if (first) await open(first);
+  if (!first) { step(""); setStatus(`No pages to edit on branch "${store.branch}" (change it under ⚙)`, "error"); return; }
+  await open(first);
+  if (wanted && wanted !== first) console.warn(`[edit] ${wanted} isn't on branch ${store.branch}; opened ${first}`);
   if (!(await compilerReady)) return;
   for (const path of files.keys()) if (files.get(path).loaded) await pushToCompiler(path);
   ready = true;
   scheduleCompile(0);
-  if (snapshot) setTimeout(() => { if (!ui.status.classList.contains("error")) setStatus(`Offline copy from ${snapshot.built} · edits preview live but can't be saved`); }, 1500);
+  if (snapshot) setTimeout(() => {
+    if (!ui.status.classList.contains("error"))
+      setStatus(`Built-in copy from ${snapshot.built}${fallbackReason ? " (GitHub: " + fallbackReason + ")" : ""} · edits preview live but can't be saved`);
+  }, 1500);
 })();
