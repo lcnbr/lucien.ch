@@ -2,7 +2,7 @@
 #import "/lib/links.typ": n
 #import "/lib/figures.typ": svg-math
 
-#show: chapter.with(number: 5, summary: "From amplitudes to potentials, the KMOC formalism, and scalar QED amplitudes computed with QGRAF, Julia and FORM.")
+#show: chapter.with(thesis: "msc-thesis", number: 5, summary: "From amplitudes to potentials, the KMOC formalism, and scalar QED amplitudes computed with QGRAF, Julia and FORM.")
 
 Whilst we have almost no hope to detect any #acr("gw", form: "full") scattering events with current experimental apparatuses, the scattering formalism can still be very useful in the quest for orbital waveforms. Most importantly, while experimental data has not been driving #emph[gravitational] scattering theory, the interplay between #emph[particle] scattering experiment and theory have been an enormously fruitful endeavor for the understanding of fundamental interactions in #acr("hep", form: "full"). The back and forth between precise measurements (such as those conducted at the #acr("lhc", form: "full") ) and precise predictions for particle scattering, has pushed the boundaries of the calculations possible. It would be therefore very beneficial if one could apply the large knowledge acquired for small non-gravitationally interacting particles, to large compact orbiting bodies. We will see that it is indeed the case.
 

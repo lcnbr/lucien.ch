@@ -2,7 +2,7 @@
 #import "/lib/links.typ": n
 #import "/lib/figures.typ": svg-math
 
-#show: chapter.with(number: 3, summary: "Laser interferometers, matched filtering and pulsar timing arrays.")
+#show: chapter.with(thesis: "msc-thesis", number: 3, summary: "Laser interferometers, matched filtering and pulsar timing arrays.")
 
 Gravitational waves were first theorized by Einstein, accompanying his theory of general relativity. However, at the time it was not even clear whether they were an artifact of the theory or an observable phenomenon. Of course, as we have seen, #acr("gw", form: "full", plural: true) are predicted to be extremely weak, and thus there was initially little hope of ever detecting them. As evidence mounted that #acr("gr", form: "full") was indeed an incredibly accurate theory of gravity, the interest in #acr("gw") detection grew. The first detectors, resonant antennas, failed in successfully detecting #acr("gw", plural: true), as they were simply not sensitive enough. The more modern laser based detectors were the finally able to claim detection, by being extremely sensitive (the modern measurement precision at #acr("ligo", form: "full") is equivalent to measuring the distance to Alpha Centauri 4.367 light-years, to the width of a human hair $tilde.op 40 med upright(µ m)$). The first detection was made in 2015 @LIGOScientific:2016aoc, marking the beginning of a new era in astronomy, and maybe even physics itself.
 

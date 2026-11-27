@@ -25,7 +25,7 @@ applies a small MathML fix-up (see below).
 | Blog post | `content/posts/YYYY-MM-DD-slug.typ` | `/blog/slug/` |
 | Garden note | `content/garden/slug.typ` | `/garden/slug/` |
 | Page | `content/pages/slug.typ` | `/slug/` |
-| Thesis chapter | `content/thesis/slug.typ` (landing: `index.typ`) | `/thesis/slug/` |
+| Thesis chapter | `content/research/<thesis>/slug.typ` (landing: `index.typ`; see `lib/thesis.typ`) | `/research/<thesis>/slug/` |
 
 ```typst
 #import "/lib/post.typ": post        // or note.typ / page.typ
@@ -69,7 +69,8 @@ personal details are shown is set by `public` at the top of `lib/cv.typ`.
 - `lib/` — templates (`base`, `post`, `note`, `page`, `indexes`) and helpers.
   Every page goes through `shell` in `lib/base.typ`: one header, one page head
   (trail of links, heading, meta line) and one footer. The header has three
-  sections (Blog, Garden, About); CV, Thesis and Blogroll live under About.
+  sections (Blog, Garden, Research, About); theses live under Research, CV and
+  Blogroll under About.
   Both lists are in `lib/config.typ` (`nav`, `more`), so a new page is added
   there, not in the header code.
 - `assets/` — CSS, fonts, `graph.js` (the notes graph) and `hover.js` (hover

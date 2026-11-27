@@ -35,8 +35,8 @@
     location: "ETH Zurich",
     start: d(2020, 9), end: d(2022, 11),
     body: (
-      en: [Overall average: 5.43/6. \ Master's thesis: "Gravitational waves from Feynman diagrams", available #link("https://lucien.ch/thesis/")[here].],
-      fr: [Moyenne générale : 5.43/6. \ Thèse de Master : « Gravitational waves from Feynman diagrams », disponible #link("https://lucien.ch/thesis/")[ici].],
+      en: [Overall average: 5.43/6. \ Master's thesis: "Gravitational waves from Feynman diagrams", available #link("https://lucien.ch/research/msc-thesis/")[here].],
+      fr: [Moyenne générale : 5.43/6. \ Thèse de Master : « Gravitational waves from Feynman diagrams », disponible #link("https://lucien.ch/research/msc-thesis/")[ici].],
     ),
   ),
   (

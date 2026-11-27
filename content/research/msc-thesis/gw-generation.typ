@@ -2,7 +2,7 @@
 #import "/lib/links.typ": n
 #import "/lib/figures.typ": svg-math
 
-#show: chapter.with(number: 2, summary: "Gravitational waves from the linearised Einstein equations, and their astrophysical sources.")
+#show: chapter.with(thesis: "msc-thesis", number: 2, summary: "Gravitational waves from the linearised Einstein equations, and their astrophysical sources.")
 
 We start by looking at where and how #acr("gw", form: "full", plural: true) are generated. We will see that #acr("gr", form: "full") predicts the existence of #acr("gw", plural: true), and we will explore under what conditions they are observable.
 

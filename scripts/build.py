@@ -102,12 +102,24 @@ def page_entries() -> tuple[list[dict], list[str]]:
         "posts": lambda slug: f"blog/{slug}",
         "garden": lambda slug: f"garden/{slug}",
         "pages": lambda slug: slug,
-        # The thesis: content/thesis/index.typ is /thesis/ (slug "thesis"),
-        # content/thesis/<stem>.typ is /thesis/<stem>/ (slug "thesis-<stem>").
-        "thesis": lambda slug: "thesis" if slug == "thesis" else "thesis/" + slug.removeprefix("thesis-"),
+        # Research: content/research/index.typ is /research/ (slug "research").
+        # A thesis is a folder: content/research/<thesis>/index.typ is
+        # /research/<thesis>/ (slug "<thesis>"), and a chapter
+        # content/research/<thesis>/<stem>.typ is /research/<thesis>/<stem>/
+        # (slug "<thesis>-<stem>"). See lib/thesis.typ.
+        "research": None,
     }
+    def research_place(path: Path) -> tuple[str, str]:
+        rel = path.relative_to(CONTENT / "research")
+        if len(rel.parts) == 1:
+            return ("research", "research") if rel.stem == "index" else (rel.stem, f"research/{rel.stem}")
+        thesis = rel.parts[0]
+        if rel.stem == "index":
+            return thesis, f"research/{thesis}"
+        return f"{thesis}-{rel.stem}", f"research/{thesis}/{rel.stem}"
     for section, prefix in sections.items():
-        for path in sorted((CONTENT / section).glob("*.typ")):
+        pattern = "**/*.typ" if section == "research" else "*.typ"
+        for path in sorted((CONTENT / section).glob(pattern)):
             stem = path.stem
             post_date = None
             if section == "posts":
@@ -116,8 +128,8 @@ def page_entries() -> tuple[list[dict], list[str]]:
                     sys.exit(f"error: post {path} must be named YYYY-MM-DD-slug.typ")
                 post_date, stem = m.groups()
             slug = stem
-            if section == "thesis":
-                slug = "thesis" if stem == "index" else f"thesis-{stem}"
+            if section == "research":
+                slug, research_base = research_place(path)
             if not SLUG.match(slug):
                 sys.exit(f"error: {path}: slug '{slug}' must be lowercase letters, digits and dashes")
             if slug in seen:
@@ -131,7 +143,7 @@ def page_entries() -> tuple[list[dict], list[str]]:
                 hidden.extend(l for l in LABEL_DEF.findall(path.read_text(encoding="utf-8")) if l not in hidden)
                 continue
             created, updated = git_dates(path)
-            base = prefix(slug)
+            base = research_base if section == "research" else prefix(slug)
             entries.append({
                 "slug": slug,
                 "section": section,

@@ -1,30 +1,42 @@
-// Template and helpers for the master's thesis: content/thesis/*.typ
+// Theses: content/research/<thesis>/index.typ is the landing page
+// (/research/<thesis>/, slug "<thesis>"), and each chapter is
+// content/research/<thesis>/<stem>.typ (/research/<thesis>/<stem>/, slug
+// "<thesis>-<stem>"). Each thesis is described once in `theses` below; the
+// Research page (/research/) lists them in this order.
 //
-// The landing page is content/thesis/index.typ (/thesis/); each chapter is
-// content/thesis/<stem>.typ (/thesis/<stem>/), with slug "thesis-<stem>".
+// To add one: a new entry here, a folder in content/research/, and figures
+// in assets/research/<thesis>/figures/.
 #import "page.typ": page
 #import "links.typ": n
 #import "acronyms.typ": acronyms
-#import "state.typ": preview
+#import "state.typ": preview, current
 
-#let thesis = (
-  title: [Gravitational Waves from Feynman Diagrams],
-  author: "Lucien Huber",
-  date: "October 2022",
-  school: "ETH Zürich",
-  advisor: "Prof. Babis Anastasiou",
-  pdf: "/assets/thesis/gravitational-waves-from-feynman-diagrams.pdf",
-  bib: "/data/thesis-references.bib",
+#let theses = (
+  "msc-thesis": (
+    title: [Gravitational Waves from Feynman Diagrams],
+    degree: "Master's thesis",
+    school: "ETH Zürich",
+    date: "October 2022",
+    advisor: "Prof. Babis Anastasiou",
+    summary: "Scattering amplitudes in gravitational wave physics: from Feynman diagrams to the classical two-body problem.",
+    pdf: "/assets/research/msc-thesis/gravitational-waves-from-feynman-diagrams.pdf",
+    bib: "/data/thesis-references.bib",
+    chapters: (
+      (number: 1, slug: "msc-thesis-introduction", title: "Introduction"),
+      (number: 2, slug: "msc-thesis-gw-generation", title: "Gravitational Wave Generation"),
+      (number: 3, slug: "msc-thesis-gw-detection", title: "Gravitational Wave Detection"),
+      (number: 4, slug: "msc-thesis-waveform-generation", title: "Waveform Generation"),
+      (number: 5, slug: "msc-thesis-scattering-amplitudes", title: "Scattering Amplitudes and GWs"),
+      (number: 6, slug: "msc-thesis-conclusion", title: "Conclusion"),
+    ),
+  ),
 )
 
-#let chapters = (
-  (number: 1, slug: "thesis-introduction", title: "Introduction"),
-  (number: 2, slug: "thesis-gw-generation", title: "Gravitational Wave Generation"),
-  (number: 3, slug: "thesis-gw-detection", title: "Gravitational Wave Detection"),
-  (number: 4, slug: "thesis-waveform-generation", title: "Waveform Generation"),
-  (number: 5, slug: "thesis-scattering-amplitudes", title: "Scattering Amplitudes and GWs"),
-  (number: 6, slug: "thesis-conclusion", title: "Conclusion"),
-)
+// The thesis the current page belongs to, from its URL (/research/<thesis>/…).
+#let here-thesis() = {
+  let e = current.get()
+  if type(e) == dictionary and "url" in e { e.url.split("/").at(2, default: none) } else { none }
+}
 
 // Acronym: form "short" (an <abbr> with the long form as tooltip), "long", or
 // "full" ("Long Form (SHORT)", used on first use in a chapter).
@@ -36,9 +48,10 @@
   if form == "long" { l } else if form == "full" [#l (#abbr)] else { abbr }
 }
 
-// Thesis figure image, served from assets/thesis/figures/.
-#let timg(name, alt: "") = context {
-  let src = "/assets/thesis/figures/" + name
+// Thesis figure image, served from assets/research/<thesis>/figures/.
+#let timg(name, alt: "", thesis: auto) = context {
+  let key = if thesis == auto { here-thesis() } else { thesis }
+  let src = "/assets/research/" + key + "/figures/" + name
   if target() == "html" {
     html.img(class: "plate", src: src, alt: alt, loading: "lazy")
   } else { image(src) }
@@ -55,7 +68,7 @@
 // where other pages are not compiled).
 #let xref(target, body) = if preview { link("#", body) } else { link(target, body) }
 
-#let chapter-nav(number) = {
+#let chapter-nav(chapters, number) = {
   let i = chapters.position(c => c.number == number)
   let prev = if i > 0 { chapters.at(i - 1) }
   let next = if i + 1 < chapters.len() { chapters.at(i + 1) }
@@ -67,10 +80,12 @@
 
 // One chapter page. Sections are numbered "<chapter>.<n>", and only labelled
 // display equations get a number, as in the PDF.
-#let chapter(number: none, summary: none, body) = {
-  let ch = chapters.find(c => c.number == number)
+#let chapter(thesis: none, number: none, summary: none, body) = {
+  let key = thesis
+  let thesis = theses.at(key)
+  let ch = thesis.chapters.find(c => c.number == number)
   page(title: [#number. #ch.title], summary: summary,
-    meta: [Chapter #number of #xref(<thesis>)[my master's thesis] · #thesis.school, #thesis.date · #link(thesis.pdf)[PDF]],
+    meta: [Chapter #number of #xref(label(key))[#thesis.title] · #thesis.degree, #thesis.school, #thesis.date · #link(thesis.pdf)[PDF]],
   {
     counter(heading).update(0)
     set heading(numbering: (..n) => str(number) + "." + n.pos().map(str).join("."))
@@ -84,6 +99,14 @@
     }
     body
     bibliography(thesis.bib, title: [References], style: "american-physics-society")
-    chapter-nav(number)
+    chapter-nav(thesis.chapters, number)
   })
 }
+
+// The theses as a list, for the Research page.
+#let thesis-list() = html.ul(class: "list", theses.pairs().map(((key, t)) => html.li({
+  html.span(class: "list-meta", t.date.split(" ").last())
+  [ ]
+  if preview { link("#", t.title) } else { link(label(key), t.title) }
+  html.p(class: "summary", [#t.degree, #t.school. #t.summary])
+})).join())

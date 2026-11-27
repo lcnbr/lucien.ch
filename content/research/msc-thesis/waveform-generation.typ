@@ -2,7 +2,7 @@
 #import "/lib/links.typ": n
 #import "/lib/figures.typ": svg-math
 
-#show: chapter.with(number: 4, summary: "Numerical relativity, post-Newtonian and post-Minkowskian expansions, and effective one-body.")
+#show: chapter.with(thesis: "msc-thesis", number: 4, summary: "Numerical relativity, post-Newtonian and post-Minkowskian expansions, and effective one-body.")
 
 The matched filtering approach introduced in the previous section motivates the development of tools for generating waveforms. The matched filtering technique is especially sensitive to the phase of the #acr("gw", form: "full") , necessitating precise determination of the waveform template's phase. These templates can be varied in physical content, but also in practicality. In all cases they need to be able to cover the set of parameters (the parameter space) that one is interested in exploring. Clearly, if the waveform has been generated purely heuristically, then the physical content of the detection is close to zero. From this approach, one can only deduce that a phenomenon producing a similar waveform was detected, but not much more. However, if the input parameters are physically meaningful, e.g.~the mass ratio of a binary compact inspiraling system, then the waveform constructed purely from this input, if matched to the signal, tells us that a compact binary inspiraling system with this mass ratio has been detected. This is called parameter estimation, and is key to maximizing the physics output of a detection.
 
@@ -107,7 +107,7 @@ square.stroked_(S R) sans("h")_3 zws^(mu nu) & = M zws^(mu nu) \[ sans("h")_1 \,
 
 This method can be supplemented by a multipolar expansion of the $sans("h")_n zws^(mu nu)$, truncated to the specific #acr("pm") order we are interested in. This combined expansion was pioneered by @Bonnor:1959, then formalised by @Thorne:1980ru, and finally applied in this present context by @Blanchet:1986.
 
-In terms of source dynamics, it is more appropriate (and uniquely able) to describe inherently relativistic phenomena, such as gravitational scattering. Its wider scope of applicability comes at the cost of a higher computational complexity, as at higher orders one encounters intricate families of relativistic integrals. Note that we have in fact computed the 1 #acr("pm") approximation already in the #n(<thesis-gw-detection>)[Chapter 3] when we linearized the #acr("efe"). Higher orders are far more difficult to obtain, especially for sources such as #acr("bbh").
+In terms of source dynamics, it is more appropriate (and uniquely able) to describe inherently relativistic phenomena, such as gravitational scattering. Its wider scope of applicability comes at the cost of a higher computational complexity, as at higher orders one encounters intricate families of relativistic integrals. Note that we have in fact computed the 1 #acr("pm") approximation already in the #n(<msc-thesis-gw-detection>)[Chapter 3] when we linearized the #acr("efe"). Higher orders are far more difficult to obtain, especially for sources such as #acr("bbh").
 
 With the rise of amplitude techniques from high energy physics, both #acr("eft") and full theory results have been successful in extracting previously unreachable orders. Such techniques are perfectly suited to compute relativistic scattering as they were developed for this specific task. We will see this in the next chapter.
 

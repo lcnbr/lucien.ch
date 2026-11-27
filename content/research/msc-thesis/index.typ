@@ -1,11 +1,12 @@
 #import "/lib/page.typ": page
 #import "/lib/links.typ": n
-#import "/lib/thesis.typ": thesis, acr
+#import "/lib/thesis.typ": theses, acr
+#let thesis = theses.at("msc-thesis")
 
 #show: page.with(
   title: [Gravitational Waves from Feynman Diagrams],
   summary: "My master's thesis (ETH Zürich, 2022) on scattering amplitudes in gravitational wave physics.",
-  meta: [Master's thesis · #thesis.school, #thesis.date · #link(thesis.pdf)[PDF, 14 MB]],
+  meta: [#thesis.degree · #thesis.school, #thesis.date · #link(thesis.pdf)[PDF, 14 MB]],
 )
 
 My master's thesis, submitted at ETH Zürich in October 2022 under the supervision of
@@ -25,12 +26,12 @@ In the last chapter we provide some concluding remarks and a brief outlook.
 
 == Contents
 
-+ #n(<thesis-introduction>)[Introduction] — Why scattering amplitudes from particle physics are useful for gravitational wave theory.
-+ #n(<thesis-gw-generation>)[Gravitational Wave Generation] — Gravitational waves from the linearised Einstein equations, and their astrophysical sources.
-+ #n(<thesis-gw-detection>)[Gravitational Wave Detection] — Laser interferometers, matched filtering and pulsar timing arrays.
-+ #n(<thesis-waveform-generation>)[Waveform Generation] — Numerical relativity, post-Newtonian and post-Minkowskian expansions, and effective one-body.
-+ #n(<thesis-scattering-amplitudes>)[Scattering Amplitudes and GWs] — From amplitudes to potentials, the KMOC formalism, and scalar QED amplitudes computed with QGRAF, Julia and FORM.
-+ #n(<thesis-conclusion>)[Conclusion] — Concluding remarks and outlook.
++ #n(<msc-thesis-introduction>)[Introduction] — Why scattering amplitudes from particle physics are useful for gravitational wave theory.
++ #n(<msc-thesis-gw-generation>)[Gravitational Wave Generation] — Gravitational waves from the linearised Einstein equations, and their astrophysical sources.
++ #n(<msc-thesis-gw-detection>)[Gravitational Wave Detection] — Laser interferometers, matched filtering and pulsar timing arrays.
++ #n(<msc-thesis-waveform-generation>)[Waveform Generation] — Numerical relativity, post-Newtonian and post-Minkowskian expansions, and effective one-body.
++ #n(<msc-thesis-scattering-amplitudes>)[Scattering Amplitudes and GWs] — From amplitudes to potentials, the KMOC formalism, and scalar QED amplitudes computed with QGRAF, Julia and FORM.
++ #n(<msc-thesis-conclusion>)[Conclusion] — Concluding remarks and outlook.
 
 == Acknowledgements
 

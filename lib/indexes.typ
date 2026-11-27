@@ -65,6 +65,9 @@
 
 // Blogroll: the newest posts of the blogs in blogroll.txt, fetched at build
 // time by scripts/blogroll.py into build/blogroll.json.
+// Blogroll: the newest posts of the blogs in blogroll.txt, fetched at build
+// time by scripts/blogroll.py into build/blogroll.json. One line per post:
+// short date, title, blog; grouped by month.
 #let blogroll-page(data) = shell(title: "Blogroll", heading: [Blogroll], description: "Recent posts from blogs I read.", kind: "index", path: "/blogroll/",
   meta: if data.fetched != none [Updated daily · last fetched #fmt-date(parse-date(data.fetched))] else [Updated daily],
 {
@@ -72,19 +75,29 @@
   if data.posts.len() == 0 {
     html.p(class: "meta", [No posts fetched in this build.])
   } else {
-    html.ul(class: "list", data.posts.map(p => html.li({
-      html.time(datetime: parse-date(p.date), fmt-date(parse-date(p.date)))
-      [ ]
-      html.a(href: p.url, p.title)
-      html.p(class: "summary", html.a(class: "quiet", href: p.at("blog-url"), p.blog))
-    })).join())
+    let months = ()
+    for p in data.posts {
+      let m = parse-date(p.date).display("[month repr:long] [year]")
+      if months.len() == 0 or months.last().at(0) != m { months.push((m, ())) }
+      months.last().at(1).push(p)
+    }
+    for (m, ps) in months {
+      section-head(m)
+      html.ul(class: "list feed", ps.map(p => html.li({
+        let d = parse-date(p.date)
+        html.time(datetime: d, d.display("[day padding:none] [month repr:short]"))
+        html.span({
+          html.a(href: p.url, p.title)
+          html.span(class: "feed-source", p.blog)
+        })
+      })).join())
+    }
   }
   if data.blogs.len() > 0 {
     section-head("Blogs")
-    html.ul(class: "list compact", data.blogs.map(b => html.li({
+    html.ul(class: "list feed", data.blogs.map(b => html.li({
+      html.a(class: "quiet", href: b.feed, "RSS")
       html.a(href: b.url, b.title)
-      [ ]
-      html.a(class: "quiet", href: b.feed, "feed")
     })).join())
   }
 })

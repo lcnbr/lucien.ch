@@ -2,7 +2,7 @@
 #import "/lib/links.typ": n
 #import "/lib/figures.typ": svg-math
 
-#show: chapter.with(number: 6, summary: "Concluding remarks and outlook.")
+#show: chapter.with(thesis: "msc-thesis", number: 6, summary: "Concluding remarks and outlook.")
 
 In this thesis, we explored the landscape of theoretical research that surrounds gravitational wave detection. We showed the existence of gravitational waves theoretically. We motivated waveform generation techniques grounded in first principles' physics. It is only through such precise frameworks that we can hope to elucidate the nature of the objects that emit gravitational radiation. We looked at #acr("nr", form: "full") and #acr("eob", form: "full") two complementary approaches to waveform generation that enabled #acr("ligo", form: "full") to make the field changing detection in 2016. Both approaches have their challenges, #acr("nr") with stability and computational cost, and #acr("eob") with higher order perturbative calculations. Each increase in precision enables a more precise match of the signal, enabling a much richer analysis of the incoming wave. Purely analytical tools have recently come into the crosshairs of particle physicists as well.
 

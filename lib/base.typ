@@ -12,8 +12,15 @@
   let n = section-of(path)
   if n == none { return () }
   let out = if path != n.href { ((label: n.label, href: n.href),) } else { () }
-  let sub = site.more.find(m => path.starts-with(m.href) and path != m.href)
-  if sub != none { out.push((label: sub.label, href: sub.href)) }
+  // Pages between the section and this one, e.g. a thesis above its chapters.
+  let parts = path.trim("/").split("/")
+  let metas = query(<page-meta>).map(m => m.value)
+  for i in range(1, parts.len()) {
+    let url = "/" + parts.slice(0, i).join("/") + "/"
+    if url == n.href { continue }
+    let m = metas.find(m => m.at("url", default: none) == url)
+    if m != none { out.push((label: m.title-text, href: url)) }
+  }
   out
 }
 

@@ -1,13 +1,34 @@
 #import "/lib/page.typ": page
 #import "/lib/cv.typ": cv-data, langs, pdf-url, date-range
 
-#show: page.with(title: [CV], summary: "Curriculum vitae of Lucien Huber, in English and French.")
-
 // The CV itself lives in /lib/cv.typ (shared with the PDFs). Both languages
-// are on the page; the switch shows one (CSS, no JavaScript needed), and a
-// small script picks French for #fr links or French-speaking browsers.
+// are on the page; the switch in the meta line under the title shows one
+// (CSS, no JavaScript needed), and a small script picks French for #fr links
+// or French-speaking browsers.
 
-#let names = (en: "English", fr: "Français")
+#let names = (en: "EN", fr: "FR")
+#let long-names = (en: "English", fr: "Français")
+
+#let switch = html.span(class: "lang-switch", role: "radiogroup", aria-label: "Language / Langue", {
+  for lang in langs {
+    html.input(type: "radio", name: "cv-lang", id: "cv-" + lang, value: lang, checked: lang == "en")
+    html.elem("label", attrs: ("for": "cv-" + lang, lang: lang, title: long-names.at(lang)), names.at(lang))
+  }
+})
+
+#show: page.with(
+  title: [CV],
+  summary: "Curriculum vitae of Lucien Huber, in English and French.",
+  meta: {
+    let c = cv-data("en")
+    if "email" in c.public { link("mailto:" + c.contact.email, c.contact.email); [ · ] }
+    for lang in langs {
+      html.a(class: "cv-pdf", lang: lang, href: pdf-url(lang), download: "", cv-data(lang).labels.pdf)
+    }
+    [ · ]
+    switch
+  },
+)
 
 #let entry(e, present) = html.li(class: "cv-entry", {
   html.span(class: "cv-when", date-range(e, present))
@@ -29,23 +50,11 @@
   let c = cv-data(lang)
   let l = c.labels
   html.div(class: "cv", lang: lang, {
-    html.div(class: "cv-head", {
-      if "photo" in c.public {
-        html.img(class: "cv-photo", src: c.contact.photo, alt: c.contact.name, width: 96, height: 128)
-      }
-      html.div({
-        html.p(class: "cv-name", c.contact.name)
-        html.p(class: "cv-contact", {
-          let parts = ()
-          if "email" in c.public { parts.push(link("mailto:" + c.contact.email, c.contact.email)) }
-          if "phone" in c.public { parts.push(link("tel:" + c.contact.phone.replace(" ", ""), c.contact.phone)) }
-          if "address" in c.public { parts.push(c.contact.address) }
-          if "birthday" in c.public { parts.push(c.contact.birthday.display("[day].[month].[year]")) }
-          parts.join(html.br())
-        })
-        html.p(class: "cv-pdf", html.a(href: pdf-url(lang), download: "", l.pdf + " ↓"))
-      })
-    })
+    let extra = ()
+    if "phone" in c.public { extra.push(link("tel:" + c.contact.phone.replace(" ", ""), c.contact.phone)) }
+    if "address" in c.public { extra.push(c.contact.address) }
+    if "birthday" in c.public { extra.push(c.contact.birthday.display("[day].[month].[year]")) }
+    if extra.len() > 0 { html.p(class: "cv-contact", extra.join(html.br())) }
     html.h2(l.education)
     html.ol(class: "cv-list", c.education.map(e => entry(e, l.present)).join())
     html.h2(l.experience)
@@ -61,12 +70,14 @@
   })
 }
 
-#html.div(class: "cv-switch", role: "radiogroup", aria-label: "Language / Langue", {
-  for lang in langs {
-    html.input(type: "radio", name: "cv-lang", id: "cv-" + lang, value: lang, checked: lang == "en")
-    html.elem("label", attrs: ("for": "cv-" + lang, lang: lang), names.at(lang))
+// The headshot sits beside the CV: in the right margin on wide screens,
+// floated beside the first section on narrow ones.
+#{
+  let c = cv-data("en")
+  if "photo" in c.public {
+    html.img(class: "cv-photo", src: c.contact.photo, alt: c.contact.name, width: 96, height: 128)
   }
-})
+}
 
 #for lang in langs { one-cv(lang) }
 
