@@ -78,9 +78,28 @@ and not in the editor's built-in snapshot. A public page that links to it with
 CI also builds a second, private site with drafts included (marked with a
 "draft" badge) and deploys it to its own Cloudflare Pages project,
 `lucien-ch-drafts` (https://lucien-ch-drafts.pages.dev, PR previews at
-`<branch>.lucien-ch-drafts.pages.dev`). Every request there needs a password:
-set it as the `DRAFTS_PASSWORD` repository secret (any user name works in the
-browser prompt). Without the secret the drafts site refuses everyone.
+`<branch>.lucien-ch-drafts.pages.dev`). You sign in with GitHub through
+Cloudflare Access, and only the accounts the Access policy allows get in.
+The site's worker also checks Access's signed token on every request, so if
+Access is off or misconfigured the drafts site refuses everyone instead of
+opening up.
+
+One-time setup (free Cloudflare Zero Trust plan):
+
+1. In the [Zero Trust dashboard](https://one.dash.cloudflare.com/), pick a
+   team name (gives `<team>.cloudflareaccess.com`) and the Free plan.
+2. [Create a GitHub OAuth app](https://github.com/settings/applications/new):
+   homepage `https://<team>.cloudflareaccess.com`, callback
+   `https://<team>.cloudflareaccess.com/cdn-cgi/access/callback`. In Zero
+   Trust → Settings → Authentication → Login methods, add GitHub with its
+   client ID and secret.
+3. Zero Trust → Access → Applications → Add → Self-hosted. Hostnames
+   `lucien-ch-drafts.pages.dev` and `*.lucien-ch-drafts.pages.dev`, login
+   method GitHub only. Policy: Allow, include Emails → your GitHub email.
+   Copy the application's **Audience (AUD) tag**.
+4. In the repo's [Actions variables](https://github.com/lcnbr/lucien.ch/settings/variables/actions),
+   set `DRAFTS_ACCESS_TEAM` (the team name) and `DRAFTS_ACCESS_AUD` (the tag),
+   then re-run the workflow.
 
 `scripts/build.py` finds drafts by reading the template call before compiling;
 the templates check again during the compile and stop the public build if a

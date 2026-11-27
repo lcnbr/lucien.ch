@@ -64,13 +64,14 @@ jobs:
           --branch ${{ github.head_ref || github.ref_name }}
 
       # Private drafts site: everything above plus pages marked `draft: true`,
-      # behind a password (the DRAFTS_PASSWORD repo secret). Its own Pages
-      # project, so nothing from it can end up on the public one. Not uploaded
-      # as an artifact: artifacts of a public repo can be downloaded by anyone.
-      # Without DRAFTS_PASSWORD the site deploys locked and refuses everyone.
+      # behind Cloudflare Access with GitHub login (README, "Drafts"). Its own
+      # Pages project, so nothing from it can end up on the public one. Not
+      # uploaded as an artifact: artifacts of a public repo can be downloaded by
+      # anyone. Until the two repo variables are set it deploys locked.
       - name: Build drafts site
         env:
-          DRAFTS_PASSWORD: ${{ secrets.DRAFTS_PASSWORD }}
+          DRAFTS_ACCESS_TEAM: ${{ vars.DRAFTS_ACCESS_TEAM }}
+          DRAFTS_ACCESS_AUD: ${{ vars.DRAFTS_ACCESS_AUD }}
         run: python3 scripts/build.py --search --editor --drafts --out dist-drafts
       - name: Create Cloudflare Pages project for drafts
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
