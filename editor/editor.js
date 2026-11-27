@@ -234,6 +234,34 @@ function slugOf(path) {
   const m = path.match(/^content\/(?:posts\/\d{4}-\d{2}-\d{2}-|garden\/|pages\/)(.+)\.typ$/);
   return m && m[1];
 }
+// Where labels defined on other pages live: slug -> page URL, label ->
+// page URL#label. Used to point preview links at the real pages.
+function externalTargets(path) {
+  const out = new Map();
+  for (const [p, src] of Object.entries(otherPages)) {
+    if (p === path) continue;
+    const slug = slugOf(p), url = urlFor(p);
+    if (slug) out.set(slug, url);
+    for (const l of labelsDefined(src).keys()) if (!out.has(l)) out.set(l, url + "#" + encodeURIComponent(l));
+  }
+  return out;
+}
+// In the single-page preview, links to other pages (and to labels on them)
+// come out as "#label", pointing at a hidden stand-in. Send them to the page.
+// A target on no published page (a draft) becomes plain words, as on the site.
+function fixLinks(html, path, text) {
+  const own = labelsDefined(text), ext = externalTargets(path);
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  let changed = false;
+  for (const a of doc.querySelectorAll('a[href^="#"]')) {
+    const l = decodeURIComponent(a.getAttribute("href").slice(1));
+    if (!l || own.has(l) || doc.getElementById(l) && !doc.getElementById(l).closest("[hidden]")) continue;
+    if (ext.has(l)) a.setAttribute("href", ext.get(l));
+    else { const s = doc.createElement("span"); s.className = "draft-link"; s.append(...a.childNodes); a.replaceWith(s); }
+    changed = true;
+  }
+  return changed ? "<!DOCTYPE html>\n" + doc.documentElement.outerHTML : html;
+}
 function withLabelStubs(path, text) {
   const own = labelsDefined(text);
   const used = new Set([...text.matchAll(LABEL)].map(m => m[1]));
@@ -282,7 +310,8 @@ async function compile() {
   if (seq !== compileSeq) return;
   showDiagnostics(result.diagnostics);
   if (!compiled) step("");
-  showPreview(fixMathML(result.output)); compiled = true;
+  const mainText = main === current ? view.state.doc.toString() : (store.getDraft(main) ?? files.get(main).text);
+  showPreview(fixLinks(fixMathML(result.output), main, mainText)); compiled = true;
   if (!isDirty()) setStatus(`Compiled in ${Math.round(performance.now() - t0)} ms`);
 }
 

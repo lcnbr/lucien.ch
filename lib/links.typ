@@ -8,8 +8,9 @@
 
 #let n(target, body) = {
   if preview {
-    // Single-page preview: other pages are not part of the compile.
-    link("#", body)
+    // Single-page preview: other pages are not part of the compile. The
+    // editor points "#<target>" at the right page (and anchor) afterwards.
+    link("#" + str(target), body)
   } else if str(target) in json("/build/manifest.json").at("hidden", default: ()) {
     // A draft (or a label on one) left out of this (public) build: keep the words, drop the link
     // and the edge, so nothing points at it.
