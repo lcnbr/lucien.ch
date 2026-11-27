@@ -7,6 +7,7 @@
   summary: "The geometric phase of an adiabatically transported eigenstate.",
   status: "budding",
   tags: ("geometry", "quantum"),
+  draft: true,
 )
 
 Transport an eigenstate $|n(bold(R))chevron.r$ of $H(bold(R))$ slowly around a
