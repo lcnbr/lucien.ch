@@ -26,12 +26,12 @@
     tags: tags,
     draft: draft,
   )) <page-meta>]
-  shell(title: plain(title), description: summary, heading: title, kind: "post", {
+  let meta = {
+    if date != none { html.time(datetime: date, fmt-date(date)) }
+    for t in tags { [ ]; html.a(class: "tag", href: "/tags/" + t + "/", "#" + t) }
+  }
+  shell(title: plain(title), description: summary, heading: title, kind: "post", meta: meta, {
     draft-banner(draft)
-    html.p(class: "meta", {
-      if date != none { html.time(datetime: date, fmt-date(date)) }
-      for t in tags { [ ]; html.a(class: "tag", href: "/tags/" + t + "/", "#" + t) }
-    })
     html.elem("article", attrs: ("data-pagefind-body": ""), body)
     if here != none { backlinks(here.slug) }
     comments(draft: draft)

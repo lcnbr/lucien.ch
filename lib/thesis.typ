@@ -40,15 +40,14 @@
 #let timg(name, alt: "") = context {
   let src = "/assets/thesis/figures/" + name
   if target() == "html" {
-    html.img(src: src, alt: alt, loading: "lazy",
-      style: "max-width: 100%; height: auto; background: #fff; border-radius: 4px;")
+    html.img(class: "plate", src: src, alt: alt, loading: "lazy")
   } else { image(src) }
 }
 
 // Several images laid out in a grid, as one figure.
 #let subfigs(columns: 4, ..items) = context {
   if target() == "html" {
-    html.div(style: "display: grid; grid-template-columns: repeat(" + str(columns) + ", minmax(0, 1fr)); gap: 0.75em; align-items: center;", items.pos().join())
+    html.div(class: "subfigs", style: "--cols: " + str(columns), items.pos().join())
   } else { grid(columns: columns, gutter: 0.75em, ..items.pos()) }
 }
 
@@ -60,10 +59,9 @@
   let i = chapters.position(c => c.number == number)
   let prev = if i > 0 { chapters.at(i - 1) }
   let next = if i + 1 < chapters.len() { chapters.at(i + 1) }
-  html.nav(class: "thesis-nav", style: "display: flex; justify-content: space-between; gap: 1em; margin: 2.5em 0 1em; font-size: 0.95em;", {
-    html.span(if prev != none { xref(label(prev.slug))[← #prev.number. #prev.title] })
-    html.span(xref(<thesis>)[Contents])
-    html.span(if next != none { xref(label(next.slug))[#next.number. #next.title →] })
+  html.nav(class: "pager", aria-label: "Chapters", {
+    html.span(class: "prev", if prev != none { xref(label(prev.slug))[#html.small[Previous] #prev.number. #prev.title] })
+    html.span(class: "next", if next != none { xref(label(next.slug))[#html.small[Next] #next.number. #next.title] })
   })
 }
 
@@ -71,7 +69,9 @@
 // display equations get a number, as in the PDF.
 #let chapter(number: none, summary: none, body) = {
   let ch = chapters.find(c => c.number == number)
-  page(title: [#number. #ch.title], summary: summary, {
+  page(title: [#number. #ch.title], summary: summary,
+    meta: [Chapter #number of #xref(<thesis>)[my master's thesis] · #thesis.school, #thesis.date · #link(thesis.pdf)[PDF]],
+  {
     counter(heading).update(0)
     set heading(numbering: (..n) => str(number) + "." + n.pos().map(str).join("."))
     set math.equation(numbering: k => "(" + str(number) + "." + str(k) + ")", supplement: [Eq.])
@@ -82,9 +82,6 @@
         math.equation(it.body, block: true, numbering: none)
       }
     }
-    html.p(class: "thesis-byline", style: "color: var(--muted); margin-top: -0.5em;")[
-      Chapter #number of my master's thesis, #xref(<thesis>)[#thesis.title] (#thesis.date). #link(thesis.pdf)[PDF]
-    ]
     body
     bibliography(thesis.bib, title: [References], style: "american-physics-society")
     chapter-nav(number)

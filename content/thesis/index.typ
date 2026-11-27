@@ -5,6 +5,7 @@
 #show: page.with(
   title: [Gravitational Waves from Feynman Diagrams],
   summary: "My master's thesis (ETH Zürich, 2022) on scattering amplitudes in gravitational wave physics.",
+  meta: [Master's thesis · #thesis.school, #thesis.date · #link(thesis.pdf)[PDF, 14 MB]],
 )
 
 My master's thesis, submitted at ETH Zürich in October 2022 under the supervision of

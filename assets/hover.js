@@ -61,7 +61,7 @@
         for (let i = 0; n && i < 3 && !/^H[2-4]$/.test(n.tagName); i++, n = n.nextElementSibling) frag.append(n.cloneNode(true));
       }
     } else {
-      const h1 = doc.querySelector("main > h1"), meta = doc.querySelector("main > .meta"), art = doc.querySelector("main article");
+      const h1 = doc.querySelector("main h1"), meta = doc.querySelector("main .page-head .meta"), art = doc.querySelector("main article");
       if (h1) { const t = document.createElement("div"); t.className = "hover-title"; t.textContent = h1.textContent; frag.append(t); }
       if (meta) frag.append(meta.cloneNode(true));
       if (art) {

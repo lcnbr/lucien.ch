@@ -2,17 +2,34 @@
 #import "config.typ": site
 #import "state.typ": current
 
-#let nav-bar() = html.header(class: "site-header", {
+// Which header section a path belongs to, and the trail of links above the
+// page heading ("About › Thesis" on a thesis chapter). Sections and the pages
+// under them are set in config.typ (`nav`, `more`).
+#let section-of(path) = if path == none { none } else {
+  site.nav.find(n => path.starts-with(n.href) or n.also.any(a => path.starts-with(a)))
+}
+#let crumbs(path) = {
+  let n = section-of(path)
+  if n == none { return () }
+  let out = if path != n.href { ((label: n.label, href: n.href),) } else { () }
+  let sub = site.more.find(m => path.starts-with(m.href) and path != m.href)
+  if sub != none { out.push((label: sub.label, href: sub.href)) }
+  out
+}
+
+#let nav-bar(path) = html.header(class: "site-header", {
   html.a(class: "site-title", href: "/", site.title)
-  html.nav({
-    html.a(href: "/blog/", "Blog")
-    html.a(href: "/garden/", "Garden")
-    html.a(href: "/cv/", "CV")
-    html.a(href: "/blogroll/", "Blogroll")
-    html.a(href: "/about/", "About")
+  html.nav(aria-label: "Site", {
+    let here = section-of(path)
+    for n in site.nav {
+      if here != none and here.href == n.href {
+        html.a(href: n.href, aria-current: if path == n.href { "page" } else { true }, n.label)
+      } else { html.a(href: n.href, n.label) }
+    }
     // Opens the search overlay (assets/search.js); also Ctrl/⌘ K or "/".
     html.button(class: "search-open", type: "button", aria-label: "Search", {
-      html.span("Search")
+      html.elem("svg", attrs: (viewBox: "0 0 24 24", "aria-hidden": "true"), html.elem("path", attrs: (d: "M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Zm5.3-2.2L21 21")))
+      html.span(class: "search-label", "Search")
       html.elem("kbd", attrs: (class: "search-key"), "⌘K")
     })
   })
@@ -20,7 +37,11 @@
 
 // `title` is plain text for <title>; `heading` is the visible page heading
 // (content, so it may contain math). `kind` becomes a body class.
-#let shell(title: none, description: none, heading: none, kind: "page", body) = {
+//
+// Every page has the same head: an optional trail of links (`crumbs`, from
+// the path), the heading, and an optional `meta` line (date, status, tags…).
+// `path` is the page's URL; content pages take it from the manifest.
+#let shell(title: none, description: none, heading: none, kind: "page", path: none, meta: none, body) = {
   set text(lang: site.lang)
   // HTML export drops equation numbers; put them back beside numbered equations.
   show math.equation.where(block: true): it => {
@@ -58,25 +79,38 @@
       html.script(src: "/assets/search.js", defer: true, "")
       if kind in ("post", "note", "page") { html.script(src: "/assets/edit.js", defer: true, "") }
     })
-    html.body(class: kind, {
-      nav-bar()
+    html.body(class: kind, context {
+      let path = if path != none { path } else {
+        let e = current.get()
+        if type(e) == dictionary and "url" in e { e.url } else { none }
+      }
+      nav-bar(path)
       html.main({
-        if heading != none { html.h1(heading) }
+        if heading != none {
+          html.header(class: "page-head", {
+            let cs = crumbs(path)
+            if cs.len() > 0 {
+              html.nav(class: "crumbs", aria-label: "Breadcrumb", cs.map(c => html.a(href: c.href, c.label)).join(html.span(class: "sep", aria-hidden: true, "/")))
+            }
+            html.h1(heading)
+            if meta != none { html.p(class: "meta", meta) }
+          })
+        }
         body
       })
       html.footer(class: "site-footer", {
-        [© #site.author · ]
-        html.a(href: "/feed.xml", "RSS")
-        // Link each content page to its source in the browser editor.
-        if kind in ("post", "note", "page") {
-          context {
+        html.span[© #site.author]
+        html.nav(aria-label: "More", {
+          for m in site.more { html.a(href: m.href, m.label) }
+          html.a(href: "/feed.xml", "RSS")
+          // Link each content page to its source in the browser editor.
+          if kind in ("post", "note", "page") {
             let e = current.get()
             if type(e) == dictionary and "path" in e {
-              [ · ]
               html.a(class: "edit-link", href: "/edit/#" + e.path.trim("/", at: start), "Edit")
             }
           }
-        }
+        })
       })
     })
   })

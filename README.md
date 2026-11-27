@@ -67,6 +67,11 @@ personal details are shown is set by `public` at the top of `lib/cv.typ`.
 - `site.typ` — bundle entry point: one `document()` per content file, plus the
   home, blog, garden and tag pages, `feed.xml` and `garden/graph.json`.
 - `lib/` — templates (`base`, `post`, `note`, `page`, `indexes`) and helpers.
+  Every page goes through `shell` in `lib/base.typ`: one header, one page head
+  (trail of links, heading, meta line) and one footer. The header has three
+  sections (Blog, Garden, About); CV, Thesis and Blogroll live under About.
+  Both lists are in `lib/config.typ` (`nav`, `more`), so a new page is added
+  there, not in the header code.
 - `assets/` — CSS, fonts, `graph.js` (the notes graph) and `hover.js` (hover
   previews of linked pages, equations and figures, plus "+" toggles that unfold a
   garden note inline). Both have no dependencies.
