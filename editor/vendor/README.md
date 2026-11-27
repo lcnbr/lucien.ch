@@ -14,7 +14,7 @@ site uses are not committed: `scripts/build.py --editor` downloads them from npm
 and copies them into `dist/edit/vendor/` at build time.
 
 Tinymist (the Typst language server behind completion, hover docs and go to
-definition) is built for the browser by `.github/workflows/tinymist.yml` and
-attached to the `tinymist-<version>` release of this repo, which `build.py`
-downloads. `TINYMIST_PKG=path/to/tinymist/crates/tinymist/pkg` uses a local
-`wasm-pack` build instead. Without it the editor works as before.
+definition) is built for the browser in CI (`.github/workflows/build.yml`,
+cached per version) and passed to `build.py` as `TINYMIST_PKG`. Locally, point
+`TINYMIST_PKG` at a `wasm-pack` build of `crates/tinymist`; without it the
+editor works as before.
