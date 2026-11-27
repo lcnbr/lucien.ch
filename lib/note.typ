@@ -8,6 +8,7 @@
 #import "state.typ": current
 #import "util.typ": plain, parse-date, fmt-date
 #import "links.typ": backlinks
+#import "comments.typ": comments
 
 #let note(title: none, summary: none, status: "seedling", tags: (), body) = context {
   let here = current.get()
@@ -34,5 +35,6 @@
       backlinks(here.slug)
       html.elem("div", attrs: (class: "local-graph", data-slug: here.slug))
     }
+    comments()
   })
 }

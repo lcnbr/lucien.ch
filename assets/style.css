@@ -176,3 +176,7 @@ html.editing .edit-tab { opacity: 0; pointer-events: none; }
   .search-dialog { margin-top: 1rem; max-height: calc(100% - 2rem); }
 }
 @media (prefers-reduced-motion: reduce) { .search-dialog[open] { animation: none; } }
+
+/* Comments (lib/comments.typ): giscus iframe below backlinks */
+.comments { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+.comments h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-top: 0; }

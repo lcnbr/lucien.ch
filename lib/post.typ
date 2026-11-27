@@ -10,6 +10,7 @@
 #import "state.typ": current
 #import "util.typ": plain, parse-date, fmt-date
 #import "links.typ": backlinks
+#import "comments.typ": comments
 
 #let post(title: none, summary: none, tags: (), draft: false, body) = context {
   let here = current.get()
@@ -30,5 +31,7 @@
     })
     html.elem("article", attrs: ("data-pagefind-body": ""), body)
     if here != none { backlinks(here.slug) }
+    // No comments on drafts, so nobody opens a discussion before publishing.
+    if not draft { comments() }
   })
 }
