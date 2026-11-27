@@ -10,19 +10,19 @@
 
 Every equation on this page is written in Typst and exported as native MathML.
 No JavaScript renders it; the browser does, using the same New Computer Modern
-Math font Typst uses for PDF.
+Math font Typst uses for PDF.#footnote[Firefox has rendered MathML for years; Chromium caught up in version 109, and Safari follows its own WebKit implementation.]
 
 == Inline and display
 
 The Gaussian integral $integral_(-oo)^oo e^(-x^2) dif x = sqrt(pi)$ sits inline,
-and its $n$-dimensional cousin gets its own line:
+and its $n$-dimensional cousin#footnote[Valid for symmetric positive-definite $A$: diagonalise it and the integral factorises into $n$ one-dimensional Gaussians.] gets its own line:
 
 $ integral_(RR^n) e^(-1/2 x^T A x + J^T x) dif^n x
   = sqrt((2 pi)^n / (det A)) thin e^(1/2 J^T A^(-1) J) $
 
 == Aligned systems
 
-Maxwell's equations in differential form:
+Maxwell's equations in differential form:#footnote[In SI units. In Gaussian units the factors of $epsilon_0$ and $mu_0$ give way to powers of $c$.]
 
 $ nabla dot bold(E) &= rho / epsilon_0 \
   nabla dot bold(B) &= 0 \
