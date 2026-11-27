@@ -14,5 +14,5 @@ Under a gauge transformation $g(x)$ it transforms as
 $ A -> g A g^(-1) + g dif g^(-1) $
 
 and its curvature is $F = dif A + A and A$. Parallel transport around a closed
-loop gives the #n(<wilson-loop>)[Wilson loop]; for a $U(1)$ bundle over
+loop gives the #n(<wilson-loop>)[Wilson loop]. For a $U(1)$ bundle over
 parameter space it is the #n(<berry-phase>)[Berry phase].

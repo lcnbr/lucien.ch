@@ -72,3 +72,32 @@ td, th { padding: 0.3em 0.7em; border-bottom: 1px solid var(--rule); }
 .garden-graph { height: 360px; margin: 1rem 0; border: 1px solid var(--rule); border-radius: 6px; }
 .local-graph { height: 220px; margin: 1rem 0; border: 1px solid var(--rule); border-radius: 6px; }
 .local-graph:empty, .garden-graph:empty { display: none; }
+
+/* Hover previews and inline windows (assets/hover.js) */
+.hover-card {
+  position: absolute; z-index: 50; max-height: 22rem; overflow: auto;
+  padding: 0.9rem 1.1rem; font-size: 0.92rem; line-height: 1.5;
+  background: var(--bg); color: var(--fg); border: 1px solid var(--rule); border-radius: 8px;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.14);
+}
+.hover-card > :first-child { margin-top: 0; }
+.hover-card > :last-child { margin-bottom: 0; }
+.hover-card .hover-title, .window .hover-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 0.2rem; }
+.hover-card .meta { margin-bottom: 0.5rem; }
+.hover-card figure, .hover-card .diagram { margin: 0.5em 0; }
+.window-toggle {
+  font: inherit; font-size: 0.75em; line-height: 1; vertical-align: 0.15em;
+  margin-left: 0.15em; padding: 0.1em 0.35em; cursor: pointer;
+  color: var(--muted); background: none; border: 1px solid var(--rule); border-radius: 4px;
+}
+.window-toggle:hover, .window-toggle[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); }
+.window {
+  margin: 0.5rem 0 1rem; padding: 0.75rem 1rem; font-size: 0.95em;
+  border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--fg) 3%, transparent);
+}
+.window .window-open { display: inline-block; margin-top: 0.4rem; font-size: 0.9em; }
+
+/* Equation numbers (lib/base.typ) */
+.equation { display: flex; align-items: center; gap: 1rem; }
+.equation > math { flex: 1; }
+.equation > .eq-num { color: var(--muted); font-variant-numeric: tabular-nums; }

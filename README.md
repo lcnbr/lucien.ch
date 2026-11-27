@@ -36,12 +36,15 @@ applies a small MathML fix-up (see below).
 Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
 ```
 
-- **Links between pages:** `#n(<slug>)[text]`. Checked at compile time, and the
+- **Links between pages:** `#n(<slug>)[text]`. Don't follow it with `;` (Typst
+  reads it as the end of the call and drops it). Checked at compile time, and the
   target page lists the source under "Linked from".
 - **Notes:** `#show: note.with(title: [...], status: "seedling" | "budding" | "evergreen")`.
   Planted and tended dates come from git.
 - **Diagrams and plots:** wrap fletcher, cetz, quill or lilaq output in
   `#diagram-frame(...)`; it becomes inline SVG in HTML and stays native in PDF.
+- **Numbered equations:** `#set math.equation(numbering: "(1)")`, label with
+  `<eq-name>`, refer with `@eq-name`. Numbers restart on every page.
 - **Awkward equation:** `#svg-math[$ ... $]` renders one equation as SVG.
 - **Data for plots:** put CSV/JSON in `data/` and read it with `csv("/data/...")`.
 
@@ -50,7 +53,9 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
 - `site.typ` — bundle entry point: one `document()` per content file, plus the
   home, blog, garden, tag and search pages, `feed.xml` and `garden/graph.json`.
 - `lib/` — templates (`base`, `post`, `note`, `page`, `indexes`) and helpers.
-- `assets/` — CSS, fonts, `graph.js` (the notes graph, no dependencies).
+- `assets/` — CSS, fonts, `graph.js` (the notes graph) and `hover.js` (hover
+  previews of linked pages, equations and figures, plus "+" toggles that unfold a
+  garden note inline). Both have no dependencies.
 - `scripts/mathml_fix.py` — Chromium sizes stretchy delimiters by their widest
   variant, which makes `f(x)` look like `f ( x )` with New Computer Modern Math.
   The fix marks fences around short content as `stretchy="false"`.

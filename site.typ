@@ -11,6 +11,12 @@
 #for entry in manifest.pages {
   [#document(entry.out, {
     current.update(entry)
+    // Counters are global across a bundle; number each page from 1.
+    counter(math.equation).update(0)
+    counter(figure.where(kind: image)).update(0)
+    counter(figure.where(kind: table)).update(0)
+    counter(figure.where(kind: raw)).update(0)
+    counter(footnote).update(0)
     include entry.path
   }) #label(entry.slug)]
 }
