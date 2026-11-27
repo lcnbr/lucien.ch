@@ -9,6 +9,7 @@
 #import "state.typ": current, check-draft, draft-banner
 #import "util.typ": plain, parse-date, fmt-date
 #import "links.typ": backlinks
+#import "comments.typ": comments
 
 #let note(title: none, summary: none, status: "seedling", tags: (), draft: false, body) = context {
   check-draft(draft)
@@ -38,5 +39,6 @@
       backlinks(here.slug)
       html.elem("div", attrs: (class: "local-graph", data-slug: here.slug))
     }
+    comments(draft: draft)
   })
 }

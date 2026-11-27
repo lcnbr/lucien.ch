@@ -11,6 +11,7 @@
 #import "state.typ": current, check-draft, draft-banner
 #import "util.typ": plain, parse-date, fmt-date
 #import "links.typ": backlinks
+#import "comments.typ": comments
 
 #let post(title: none, summary: none, tags: (), draft: false, body) = context {
   check-draft(draft)
@@ -33,5 +34,6 @@
     })
     html.elem("article", attrs: ("data-pagefind-body": ""), body)
     if here != none { backlinks(here.slug) }
+    comments(draft: draft)
   })
 }
