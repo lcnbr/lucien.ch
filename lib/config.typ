@@ -8,6 +8,7 @@
   nav: (
     (label: "Blog", target: <blog>),
     (label: "Garden", target: <garden>),
+    (label: "Blogroll", target: <blogroll>),
     (label: "About", target: <about>),
   ),
 )

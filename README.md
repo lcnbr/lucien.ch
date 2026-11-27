@@ -70,6 +70,18 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
 
 Typst's HTML and bundle export are experimental, so the Typst version is pinned.
 
+## Blogroll
+
+`/blogroll/` lists the newest posts of the blogs in [`blogroll.txt`](blogroll.txt),
+newest first (idea from [matklad](https://matklad.github.io/links.html)). Add one
+RSS or Atom feed URL per line; anything after the URL is a comment.
+
+`scripts/blogroll.py` fetches the feeds at build time (three newest posts per
+blog) into `build/blogroll.json`, which `site.typ` reads. A feed that fails is
+skipped with a warning, never fatal. CI rebuilds main every day at 05:17 UTC so
+the page stays fresh. `python3 scripts/build.py --offline` skips the fetch and
+reuses the last one.
+
 ## Drafts
 
 A post, note or page with `draft: true` in its `#show: ….with(...)` call is

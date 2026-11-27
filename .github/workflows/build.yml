@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  # Daily rebuild of main so the blogroll (/blogroll/) picks up new posts.
+  schedule:
+    - cron: "17 5 * * *"
 
 permissions:
   contents: read
@@ -101,6 +104,7 @@ jobs:
       # variables of the same names override them.
       - name: Build drafts site
         env:
+          BLOGROLL_OFFLINE: "1" # reuse the feeds fetched for the public build
           DRAFTS_ACCESS_TEAM: ${{ vars.DRAFTS_ACCESS_TEAM || 'lcnbr' }}
           DRAFTS_ACCESS_AUD: ${{ vars.DRAFTS_ACCESS_AUD || 'b6de2ac52ff95341df6fa47d2d5fc0d6da17d0a9a4d03871fea2de2de3516283' }}
         run: python3 scripts/build.py --search --editor --drafts --out dist-drafts
