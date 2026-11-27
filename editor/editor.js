@@ -29,6 +29,13 @@ const store = {
 };
 
 const $ = id => document.getElementById(id);
+// Embedded mode (#!path): the editor runs in a panel docked on the page itself
+// (see assets/edit.js) and sends each compiled page to it instead of showing it.
+const EMBED = location.hash.startsWith("#!");
+const HASH = EMBED ? "#!" : "#";
+const hashPath = () => decodeURIComponent(location.hash.slice(HASH.length));
+const toHost = msg => { try { window.parent.postMessage({ source: "lucien-edit", ...msg }, "*"); } catch {} };
+if (EMBED) document.body.classList.add("embed");
 const ui = {
   file: $("file"), save: $("save"), status: $("status"), view: $("view"),
   preview: $("preview"), diagnostics: $("diagnostics"),
@@ -189,6 +196,7 @@ async function compile() {
 }
 
 function showPreview(html) {
+  if (EMBED) { toHost({ type: "preview", html }); return; }
   const win = ui.preview.contentWindow, y = win ? win.scrollY : 0;
   ui.preview.onload = () => { try { ui.preview.contentWindow.scrollTo(0, y); } catch {} };
   // Site-absolute paths (/assets/style.css, /blog/…) resolve from the site root,
@@ -306,8 +314,8 @@ async function open(path) {
   const text = draft !== null && draft !== f.saved ? draft : f.text;
   view.setState(EditorState.create({ doc: text, extensions: extensions() }));
   ui.file.value = path; ui.view.href = siteHref(urlFor(path));
-  if (!compiled && files.get(path).sha !== null) ui.preview.src = siteHref(urlFor(path));
-  if (location.hash.slice(1) !== path) history.replaceState(null, "", "#" + path);
+  if (!EMBED && !compiled && files.get(path).sha !== null) ui.preview.src = siteHref(urlFor(path));
+  if (hashPath() !== path) history.replaceState(null, "", HASH + path);
   refreshDirty();
   if (draft !== null && draft !== f.saved) setStatus("Restored unsaved changes from this browser", "dirty");
   scheduleCompile(0);
@@ -370,6 +378,7 @@ $("new-dialog").addEventListener("close", async () => {
 // ---- panel -------------------------------------------------------------------
 const PANEL_KEY = "edit.panelWidth";
 function setPanel(open) {
+  if (EMBED) { if (!open) toHost({ type: "close" }); return; }
   document.body.classList.toggle("closed", !open);
   if (open && view) requestAnimationFrame(() => view.focus());
 }
@@ -401,7 +410,7 @@ try { const w = localStorage.getItem(PANEL_KEY); if (w) document.documentElement
 $("settings").addEventListener("click", openSettings);
 ui.save.addEventListener("click", save);
 ui.file.addEventListener("change", () => open(ui.file.value));
-window.addEventListener("hashchange", () => { const p = decodeURIComponent(location.hash.slice(1)); if (p && p !== current) open(p); });
+window.addEventListener("hashchange", () => { const p = hashPath(); if (p && p !== current) open(p); });
 window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault(); });
 
 (async () => {
@@ -421,7 +430,7 @@ window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault()
   fillFileList();
   // Templates and data are small and needed by every page; load them up front.
   await Promise.all([...files.keys()].filter(p => p.startsWith("lib/") || p.startsWith("data/")).map(loadFile));
-  const wanted = decodeURIComponent(location.hash.slice(1));
+  const wanted = hashPath();
   const first = files.has(wanted) ? wanted : ui.file.options[0] && ui.file.options[0].value;
   if (first) await open(first);
   setStatus("Starting the Typst compiler (first visit downloads about 10 MB)…", "busy");

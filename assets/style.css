@@ -101,3 +101,39 @@ td, th { padding: 0.3em 0.7em; border-bottom: 1px solid var(--rule); }
 .equation { display: flex; align-items: center; gap: 1rem; }
 .equation > math { flex: 1; }
 .equation > .eq-num { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Edit in place (edit.js): the editor docks on the right and the page reflows. */
+:root { --edit-w: min(46vw, 760px); --edit-ease: cubic-bezier(0.2, 0.8, 0.2, 1); }
+html { transition: padding 360ms var(--edit-ease); }
+html.editing { padding-right: var(--edit-w); }
+.edit-dock {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 50; width: var(--edit-w);
+  transform: translateX(100%); transition: transform 360ms var(--edit-ease);
+  background: var(--bg); box-shadow: -18px 0 40px rgb(20 20 30 / 0.12);
+}
+html.editing .edit-dock { transform: none; }
+.edit-dock iframe { display: block; width: 100%; height: 100%; border: 0; }
+.edit-dock-handle { position: absolute; z-index: 1; top: 0; bottom: 0; left: -5px; width: 10px; cursor: col-resize; touch-action: none; }
+.edit-dock-handle:hover { background: linear-gradient(to right, transparent 4px, var(--accent) 4px, var(--accent) 6px, transparent 6px); }
+html.edit-resizing, html.edit-resizing .edit-dock { transition: none; }
+html.edit-resizing .edit-dock iframe { pointer-events: none; }
+html.edit-resizing { cursor: col-resize; user-select: none; }
+.edit-tab {
+  position: fixed; right: 0; top: 50%; z-index: 40; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 8px; border: 0; border-radius: 10px 0 0 10px; cursor: pointer;
+  background: var(--fg); color: var(--bg); font: 600 13px/1 system-ui, sans-serif; letter-spacing: 0.04em;
+  transform: translate(calc(100% - 6px), -50%); opacity: 0.55; transition: transform 200ms var(--edit-ease), opacity 200ms;
+}
+.edit-tab:hover, .edit-tab:focus-visible { transform: translate(0, -50%); opacity: 1; }
+.edit-tab svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.edit-tab span { writing-mode: vertical-rl; }
+html.editing .edit-tab { opacity: 0; pointer-events: none; }
+@media (max-width: 760px) {
+  html.editing { padding-right: 0; padding-bottom: 58vh; }
+  .edit-dock { top: auto; left: 0; width: auto; height: 58vh; transform: translateY(100%); box-shadow: 0 -12px 30px rgb(0 0 0 / 0.15); }
+  .edit-dock-handle { display: none; }
+  .edit-tab { top: auto; bottom: 16px; right: 16px; flex-direction: row; padding: 10px 14px; border-radius: 999px; transform: none; opacity: 0.9; }
+  .edit-tab:hover, .edit-tab:focus-visible { transform: none; }
+  .edit-tab span { writing-mode: horizontal-tb; }
+}
+@media (prefers-reduced-motion: reduce) { html, .edit-dock, .edit-tab { transition: none; } }

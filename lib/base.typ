@@ -36,6 +36,7 @@
       html.link(rel: "alternate", type: "application/rss+xml", title: site.title, href: "/feed.xml")
       if kind in ("note", "index") { html.script(src: "/assets/graph.js", defer: true, "") }
       html.script(src: "/assets/hover.js", defer: true, "")
+      if kind in ("post", "note", "page") { html.script(src: "/assets/edit.js", defer: true, "") }
     })
     html.body(class: kind, {
       nav-bar()

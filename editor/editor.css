@@ -123,3 +123,8 @@ dialog menu { display: flex; justify-content: flex-end; gap: 8px; padding: 0; ma
   .reopen { top: auto; bottom: 16px; right: 16px; transform: none; flex-direction: row; padding: 10px 16px; border-radius: 999px; border-right: 1px solid var(--accent); }
   .reopen span { writing-mode: horizontal-tb; }
 }
+
+/* embedded in a page (assets/edit.js docks this in a panel on the right) */
+body.embed, body.embed.closed { display: block; }
+body.embed .stage, body.embed .resizer, body.embed .reopen { display: none; }
+body.embed .panel, body.embed.closed .panel { display: flex; height: 100%; animation: none; box-shadow: none; border: 0; }
