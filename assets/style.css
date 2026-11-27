@@ -63,7 +63,8 @@ td, th { padding: 0.3em 0.7em; border-bottom: 1px solid var(--rule); }
 .list .summary { margin: 0.15em 0 0; color: var(--muted); font-size: 0.92em; }
 .lede { font-size: 1.15rem; }
 
-.diagram, .svg-math { margin: 1.5em 0; overflow-x: auto; }
+/* overflow-x: auto also clips vertically, so leave room for labels that overhang the frame. */
+.diagram, .svg-math { margin: 1.5em 0; padding: 0.75em 0; overflow-x: auto; }
 .diagram svg, .svg-math svg { margin: 0 auto; max-width: 100%; height: auto; }
 
 .backlinks { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: 0.95rem; }
