@@ -204,9 +204,53 @@ async function startCompiler() {
   step("");
 }
 
+// ---- labels on other pages ---------------------------------------------------
+// The preview compiles one page, so labels defined on other pages (equations,
+// figures, page slugs) don't exist and #link(<x>) / @x to them fail. Hidden
+// placeholders for those labels let the page compile; references to them read
+// "Equation ?" since the number lives on the other page.
+let otherPages = {}; // content path -> source, from the built copy
+async function loadLabelIndex() {
+  try {
+    const j = snapshot || await (await fetch(new URL("./snapshot.json", import.meta.url))).json();
+    for (const [p, v] of Object.entries(j.files)) if (p.startsWith("content/") && typeof v === "string") otherPages[p] = v;
+  } catch {}
+}
+const LABEL = /<([\p{L}\p{N}_:.-]+)>/gu;
+// Labels a source defines: `<x>` not used as an argument, i.e. not after "(" or ",".
+function labelsDefined(text) {
+  const out = new Map();
+  for (const m of text.matchAll(LABEL)) {
+    const before = text.slice(Math.max(0, m.index - 400), m.index).trimEnd();
+    const c = before.slice(-1);
+    if (c === "(" || c === ",") continue;
+    out.set(m[1], c === "$" ? "Equation" : /#figure\(/.test(before) && (c === ")" || c === "]") ? "Figure" : "Section");
+  }
+  return out;
+}
+function slugOf(path) {
+  const m = path.match(/^content\/(?:posts\/\d{4}-\d{2}-\d{2}-|garden\/|pages\/)(.+)\.typ$/);
+  return m && m[1];
+}
+function withLabelStubs(path, text) {
+  const own = labelsDefined(text);
+  const used = new Set([...text.matchAll(LABEL)].map(m => m[1]));
+  for (const m of text.matchAll(/@([\p{L}\p{N}_:.-]+)/gu)) used.add(m[1].replace(/[.:]+$/, ""));
+  const elsewhere = new Map();
+  for (const [p, src] of Object.entries(otherPages)) {
+    if (p === path) continue;
+    const slug = slugOf(p); if (slug) elsewhere.set(slug, "Page");
+    for (const [l, kind] of labelsDefined(src)) elsewhere.set(l, kind);
+  }
+  const stubs = [...used].filter(l => !own.has(l) && elsewhere.has(l));
+  if (!stubs.length) return text;
+  return text + "\n#html.div(hidden: true)[" + stubs.map(l =>
+    `#figure(kind: "preview-stub", supplement: [${elsewhere.get(l)}], numbering: _ => "?", []) <${l}>`).join(" ") + "]\n";
+}
+
 async function pushToCompiler(path) {
   const f = files.get(path);
-  if (f.text !== undefined) await compiler.addSource(path, path === current && view ? view.state.doc.toString() : f.text);
+  if (f.text !== undefined) await compiler.addSource(path, path === current && view ? withLabelStubs(path, view.state.doc.toString()) : f.text);
   else if (f.bytes) await compiler.addFile(path, f.bytes);
 }
 
@@ -216,7 +260,7 @@ async function compile() {
   if (!ready || !current) return;
   const seq = ++compileSeq, t0 = performance.now();
   if (!compiled) step("Compiling the page");
-  await compiler.addSource(current, view.state.doc.toString());
+  await compiler.addSource(current, withLabelStubs(current, view.state.doc.toString()));
   let result;
   try {
     result = await compiler.compile({ format: "html", main: current, inputs: { preview: "true" } });
@@ -483,6 +527,7 @@ window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault()
   if (!first) { step(""); setStatus(`No pages to edit on branch "${store.branch}" (change it under ⚙)`, "error"); return; }
   await open(first);
   if (wanted && wanted !== first) console.warn(`[edit] ${wanted} isn't on branch ${store.branch}; opened ${first}`);
+  await loadLabelIndex();
   if (!(await compilerReady)) return;
   for (const path of files.keys()) if (files.get(path).loaded) await pushToCompiler(path);
   ready = true;
