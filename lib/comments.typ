@@ -2,12 +2,14 @@
 // Discussion in the repo, created on the first comment. Readers sign in with
 // GitHub; replies and moderation happen on github.com.
 #import "config.typ": site
-#import "state.typ": preview
+#import "state.typ": preview, drafts
 
-#let comments() = {
+// Off for drafts, on the whole private drafts site, in the editor preview,
+// and until the repo and category ids are set, so no discussion is opened
+// for a page that is not public yet.
+#let comments(draft: false) = {
   let g = site.at("giscus", default: none)
-  // Off in the editor preview, and until the repo and category ids are set.
-  if preview or g == none or g.repo-id == "" or g.category-id == "" { return }
+  if draft or drafts or preview or g == none or g.repo-id == "" or g.category-id == "" { return }
   html.elem("section", attrs: (class: "comments", aria-label: "Comments"), {
     html.h2("Comments")
     html.elem("script", attrs: (

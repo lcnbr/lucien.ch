@@ -34,7 +34,6 @@
     })
     html.elem("article", attrs: ("data-pagefind-body": ""), body)
     if here != none { backlinks(here.slug) }
-    // No comments on drafts, so nobody opens a discussion before publishing.
-    if not draft { comments() }
+    comments(draft: draft)
   })
 }

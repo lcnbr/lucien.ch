@@ -39,6 +39,6 @@
       backlinks(here.slug)
       html.elem("div", attrs: (class: "local-graph", data-slug: here.slug))
     }
-    comments()
+    comments(draft: draft)
   })
 }
