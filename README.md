@@ -51,7 +51,7 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
 ## How it fits together
 
 - `site.typ` — bundle entry point: one `document()` per content file, plus the
-  home, blog, garden, tag and search pages, `feed.xml` and `garden/graph.json`.
+  home, blog, garden and tag pages, `feed.xml` and `garden/graph.json`.
 - `lib/` — templates (`base`, `post`, `note`, `page`, `indexes`) and helpers.
 - `assets/` — CSS, fonts, `graph.js` (the notes graph) and `hover.js` (hover
   previews of linked pages, equations and figures, plus "+" toggles that unfold a
