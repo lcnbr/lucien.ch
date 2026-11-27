@@ -12,5 +12,5 @@ For a #n(<gauge-connection>)[gauge connection] $A$ and a closed curve $C$,
 
 $ W_R (C) = tr_R cal(P) exp(i integral.cont_C A) $
 
-is gauge invariant. Its abelian, adiabatic cousin is the #n(<berry-phase>)[Berry phase], whose line integral is #link(<eq-berry>)[equation (1) there]. In pure Yang-Mills an area law
+is gauge invariant. Its abelian, adiabatic cousin is the #n(<berry-phase>)[Berry phase], whose line integral is #n(<eq-berry>)[equation (1) there]. In pure Yang-Mills an area law
 $chevron.l W(C) chevron.r ~ e^(-sigma "Area"(C))$ signals confinement.

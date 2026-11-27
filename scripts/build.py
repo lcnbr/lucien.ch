@@ -54,6 +54,7 @@ EDITOR_FONTS = ["NewCM10-Regular.otf", "NewCM10-Italic.otf", "NewCM10-Bold.otf",
                 "NewCM10-BoldItalic.otf", "NewCMMath-Regular.otf", "DejaVuSansMono.ttf"]
 
 DATED = re.compile(r"^(\d{4}-\d{2}-\d{2})-(.+)$")
+LABEL_DEF = re.compile(r"(?<![(\w])<([A-Za-z_][\w:.-]*)>")  # <label>, not #link(<label>)
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 TEMPLATE_CALL = re.compile(r"#show:\s*(?:post|note|page)\.with\(")
 DRAFT_ARG = re.compile(r"(?<![\w-])draft\s*:\s*true(?![\w-])")
@@ -118,7 +119,10 @@ def page_entries() -> tuple[list[dict], list[str]]:
             seen[slug] = path
             draft = is_draft(path)
             if draft and not DRAFTS:
+                # The page's slug and the labels it defines (equations,
+                # figures, sections), so links into it can be dropped too.
                 hidden.append(slug)
+                hidden.extend(l for l in LABEL_DEF.findall(path.read_text(encoding="utf-8")) if l not in hidden)
                 continue
             created, updated = git_dates(path)
             base = prefix(slug)
