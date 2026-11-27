@@ -1,0 +1,75 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Gauge connection · Lucien</title><meta name="description" content="A rule for comparing fibres at nearby points; physicists call it a gauge field."><link rel="preload" href="/assets/fonts/NewCMMath-Regular.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/assets/style.css"><link rel="alternate" type="application/rss+xml" title="Lucien" href="/feed.xml"><script src="/assets/graph.js" defer></script><style>/* Alignment */
+mtable.right-align mtd,
+mtable mtd.right-align,
+mtable.left-align mtd.right-align,
+mtable.aligned mtd:nth-child(odd) {
+  justify-items: end;
+  text-align: right;
+}
+mtable.cases mtd,
+mtable.left-align mtd,
+mtable mtd.left-align,
+mtable.aligned mtd:nth-child(even),
+math:is(:not([display])) > mtable.multiline-equation mtd {
+  justify-items: start;
+  text-align: left;
+}
+mtable.cases mtd,
+mtable.aligned mtd,
+mtable mtd.flushed,
+mtable mtd.left-flush {
+  padding-left: 0;
+}
+mtable.cases mtd,
+mtable.aligned mtd,
+mtable mtd.flushed,
+mtable mtd.right-flush {
+  padding-right: 0;
+}
+
+/* Tables */
+mtable {
+  math-style: inherit;
+}
+mtd {
+  math-depth: auto-add;
+  math-style: compact;
+  math-shift: compact;
+}
+
+/* Equations */
+mtable.multiline-equation mtd {
+  math-depth: inherit;
+  math-style: inherit;
+  math-shift: inherit;
+  padding: 0;
+}
+math > mtable.multiline-equation mtr:not(:last-child) mtd {
+  padding-bottom: 0.5em;
+}
+
+/* Fractions */
+mfrac {
+  padding-inline: 0;
+  margin-inline: 0.1em;
+}
+
+/* Accents */
+mover[accent="true" i] > :first-child {
+  font-feature-settings: "dtls";
+}
+mover.dotted[accent="true" i] > :first-child {
+  font-feature-settings: "dtls" 0;
+}
+
+/* Other rules for scriptlevel, displaystyle and math-shift */
+munder > :nth-child(2),
+munderover > :nth-child(2) {
+  math-shift: compact
+}
+munder[accentunder="true" i] > :not(:first-child),
+mover[accent="true" i] > :not(:first-child) {
+  math-depth: inherit;
+  math-style: inherit;
+  math-shift: inherit;
+}</style></head><body class="note"><header class="site-header"><a class="site-title" href="/">Lucien</a><nav><a href="/blog/">Blog</a><a href="/garden/">Garden</a><a href="/about/">About</a><a href="/search/">Search</a></nav></header><main><h1>Gauge connection</h1><p class="meta"><span class="status seedling">seedling</span> · planted 27 November 2026 <a class="tag" href="/tags/geometry/">#geometry</a></p><article data-pagefind-body><p>A connection on a principal <math><mi>𝐺</mi></math>-bundle is a Lie-algebra valued one-form <math><mi>𝐴</mi></math>. Under a gauge transformation <math><mi>𝑔</mi><mrow><mo stretchy="false">(</mo><mi>𝑥</mi><mo stretchy="false">)</mo></mrow></math> it transforms as</p><math display="block"><mi>𝐴</mi><mo stretchy="false">→</mo><mi>𝑔</mi><mi>𝐴</mi><msup><mi>𝑔</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>+</mo><mi>𝑔</mi><mspace width="0.1667em"/><mo form="prefix" lspace="0em" rspace="0em">d</mo><msup><mi>𝑔</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></math><p>and its curvature is <math><mi>𝐹</mi><mo rspace="0em">=</mo><mspace width="0.1667em"/><mo form="prefix" lspace="0em" rspace="0em">d</mo><mi>𝐴</mi><mo>+</mo><mi>𝐴</mi><mo>∧</mo><mi>𝐴</mi></math>. Parallel transport around a closed loop gives the <a href="../wilson-loop/index.html">Wilson loop</a> for a <math><mi>𝑈</mi><mrow><mo stretchy="false">(</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></math> bundle over parameter space it is the <a href="../berry-phase/index.html">Berry phase</a>.</p></article><aside class="backlinks"><h2>Linked from</h2><ul><li><a href="../../blog/diagrams-and-plots/index.html">Diagrams and plots</a></li><li><a href="../berry-phase/index.html">Berry phase</a></li><li><a href="../wilson-loop/index.html">Wilson loop</a></li></ul></aside><div class="local-graph" data-slug="gauge-connection"></div></main><footer class="site-footer">© 2026 Lucien · <a href="/feed.xml">RSS</a></footer></body></html>

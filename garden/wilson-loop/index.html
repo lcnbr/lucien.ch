@@ -1,0 +1,75 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Wilson loop · Lucien</title><meta name="description" content="The trace of the holonomy of a gauge field around a closed loop."><link rel="preload" href="/assets/fonts/NewCMMath-Regular.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/assets/style.css"><link rel="alternate" type="application/rss+xml" title="Lucien" href="/feed.xml"><script src="/assets/graph.js" defer></script><style>/* Alignment */
+mtable.right-align mtd,
+mtable mtd.right-align,
+mtable.left-align mtd.right-align,
+mtable.aligned mtd:nth-child(odd) {
+  justify-items: end;
+  text-align: right;
+}
+mtable.cases mtd,
+mtable.left-align mtd,
+mtable mtd.left-align,
+mtable.aligned mtd:nth-child(even),
+math:is(:not([display])) > mtable.multiline-equation mtd {
+  justify-items: start;
+  text-align: left;
+}
+mtable.cases mtd,
+mtable.aligned mtd,
+mtable mtd.flushed,
+mtable mtd.left-flush {
+  padding-left: 0;
+}
+mtable.cases mtd,
+mtable.aligned mtd,
+mtable mtd.flushed,
+mtable mtd.right-flush {
+  padding-right: 0;
+}
+
+/* Tables */
+mtable {
+  math-style: inherit;
+}
+mtd {
+  math-depth: auto-add;
+  math-style: compact;
+  math-shift: compact;
+}
+
+/* Equations */
+mtable.multiline-equation mtd {
+  math-depth: inherit;
+  math-style: inherit;
+  math-shift: inherit;
+  padding: 0;
+}
+math > mtable.multiline-equation mtr:not(:last-child) mtd {
+  padding-bottom: 0.5em;
+}
+
+/* Fractions */
+mfrac {
+  padding-inline: 0;
+  margin-inline: 0.1em;
+}
+
+/* Accents */
+mover[accent="true" i] > :first-child {
+  font-feature-settings: "dtls";
+}
+mover.dotted[accent="true" i] > :first-child {
+  font-feature-settings: "dtls" 0;
+}
+
+/* Other rules for scriptlevel, displaystyle and math-shift */
+munder > :nth-child(2),
+munderover > :nth-child(2) {
+  math-shift: compact
+}
+munder[accentunder="true" i] > :not(:first-child),
+mover[accent="true" i] > :not(:first-child) {
+  math-depth: inherit;
+  math-style: inherit;
+  math-shift: inherit;
+}</style></head><body class="note"><header class="site-header"><a class="site-title" href="/">Lucien</a><nav><a href="/blog/">Blog</a><a href="/garden/">Garden</a><a href="/about/">About</a><a href="/search/">Search</a></nav></header><main><h1>Wilson loop</h1><p class="meta"><span class="status seedling">seedling</span> · planted 27 November 2026 <a class="tag" href="/tags/geometry/">#geometry</a> <a class="tag" href="/tags/qft/">#qft</a></p><article data-pagefind-body><p>For a <a href="../gauge-connection/index.html">gauge connection</a> <math><mi>𝐴</mi></math> and a closed curve <math><mi>𝐶</mi></math>,</p><math display="block"><msub><mi>𝑊</mi><mi>𝑅</mi></msub><mrow><mo stretchy="false">(</mo><mi>𝐶</mi><mo stretchy="false">)</mo></mrow><mo>=</mo><msub><mo form="prefix" lspace="0em" rspace="0.16666666666666666em">tr</mo><mi>𝑅</mi></msub><mi>𝒫︀</mi><mo form="prefix" lspace="0.16666666666666666em" rspace="0em">exp</mo><mrow><mo>(</mo><mrow><mi>𝑖</mi><msub><mo form="prefix">∮</mo><mi>𝐶</mi></msub><mi>𝐴</mi></mrow><mo>)</mo></mrow></math><p>is gauge invariant. In pure Yang-Mills an area law <math><mo stretchy="false">⟨</mo><mi>𝑊</mi><mrow><mo stretchy="false">(</mo><mi>𝐶</mi><mo stretchy="false">)</mo></mrow><mo form="postfix" stretchy="false">⟩</mo><mo>∼</mo><msup><mi>𝑒</mi><mrow><mo>−</mo><mi>𝜎</mi><mspace width="0.2222em"/><mtext>Area</mtext><mrow><mo stretchy="false">(</mo><mi>𝐶</mi><mo stretchy="false">)</mo></mrow></mrow></msup></math> signals confinement.</p></article><aside class="backlinks"><h2>Linked from</h2><ul><li><a href="../berry-phase/index.html">Berry phase</a></li><li><a href="../gauge-connection/index.html">Gauge connection</a></li></ul></aside><div class="local-graph" data-slug="wilson-loop"></div></main><footer class="site-footer">© 2026 Lucien · <a href="/feed.xml">RSS</a></footer></body></html>

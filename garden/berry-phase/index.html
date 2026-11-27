@@ -1,0 +1,75 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Berry phase · Lucien</title><meta name="description" content="The geometric phase of an adiabatically transported eigenstate."><link rel="preload" href="/assets/fonts/NewCMMath-Regular.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/assets/style.css"><link rel="alternate" type="application/rss+xml" title="Lucien" href="/feed.xml"><script src="/assets/graph.js" defer></script><style>/* Alignment */
+mtable.right-align mtd,
+mtable mtd.right-align,
+mtable.left-align mtd.right-align,
+mtable.aligned mtd:nth-child(odd) {
+  justify-items: end;
+  text-align: right;
+}
+mtable.cases mtd,
+mtable.left-align mtd,
+mtable mtd.left-align,
+mtable.aligned mtd:nth-child(even),
+math:is(:not([display])) > mtable.multiline-equation mtd {
+  justify-items: start;
+  text-align: left;
+}
+mtable.cases mtd,
+mtable.aligned mtd,
+mtable mtd.flushed,
+mtable mtd.left-flush {
+  padding-left: 0;
+}
+mtable.cases mtd,
+mtable.aligned mtd,
+mtable mtd.flushed,
+mtable mtd.right-flush {
+  padding-right: 0;
+}
+
+/* Tables */
+mtable {
+  math-style: inherit;
+}
+mtd {
+  math-depth: auto-add;
+  math-style: compact;
+  math-shift: compact;
+}
+
+/* Equations */
+mtable.multiline-equation mtd {
+  math-depth: inherit;
+  math-style: inherit;
+  math-shift: inherit;
+  padding: 0;
+}
+math > mtable.multiline-equation mtr:not(:last-child) mtd {
+  padding-bottom: 0.5em;
+}
+
+/* Fractions */
+mfrac {
+  padding-inline: 0;
+  margin-inline: 0.1em;
+}
+
+/* Accents */
+mover[accent="true" i] > :first-child {
+  font-feature-settings: "dtls";
+}
+mover.dotted[accent="true" i] > :first-child {
+  font-feature-settings: "dtls" 0;
+}
+
+/* Other rules for scriptlevel, displaystyle and math-shift */
+munder > :nth-child(2),
+munderover > :nth-child(2) {
+  math-shift: compact
+}
+munder[accentunder="true" i] > :not(:first-child),
+mover[accent="true" i] > :not(:first-child) {
+  math-depth: inherit;
+  math-style: inherit;
+  math-shift: inherit;
+}</style></head><body class="note"><header class="site-header"><a class="site-title" href="/">Lucien</a><nav><a href="/blog/">Blog</a><a href="/garden/">Garden</a><a href="/about/">About</a><a href="/search/">Search</a></nav></header><main><h1>Berry phase</h1><p class="meta"><span class="status budding">budding</span> · planted 27 November 2026 <a class="tag" href="/tags/geometry/">#geometry</a> <a class="tag" href="/tags/quantum/">#quantum</a></p><article data-pagefind-body><p>Transport an eigenstate <math><mo stretchy="false">|</mo><mi>𝑛</mi><mrow><mo stretchy="false">(</mo><mi>𝑹</mi><mo stretchy="false">)</mo></mrow><mo stretchy="false">⟩</mo></math> of <math><mi>𝐻</mi><mrow><mo stretchy="false">(</mo><mi>𝑹</mi><mo stretchy="false">)</mo></mrow></math> slowly around a closed loop <math><mi>𝐶</mi></math> in parameter space. Besides the dynamical phase it picks up</p><math display="block"><msub><mi>𝛾</mi><mi>𝑛</mi></msub><mrow><mo stretchy="false">(</mo><mi>𝐶</mi><mo stretchy="false">)</mo></mrow><mo>=</mo><mi>𝑖</mi><msub><mo form="prefix" rspace="0em">∮</mo><mi>𝐶</mi></msub><mo form="prefix" stretchy="false">⟨</mo><mi>𝑛</mi><mrow><mo stretchy="false">(</mo><mi>𝑹</mi><mo stretchy="false">)</mo></mrow><mspace width="0.2222em"/><mo lspace="0em" rspace="0em">|</mo><mspace width="0.2222em"/><msub><mo form="prefix">∇</mo><mi>𝑹</mi></msub><mi>𝑛</mi><mrow><mo stretchy="false">(</mo><mi>𝑹</mi><mo stretchy="false">)</mo></mrow><mo form="postfix" stretchy="false">⟩</mo><mo lspace="0.2222222222222222em" rspace="0em">⋅</mo><mspace width="0.1667em"/><mo form="prefix" lspace="0em" rspace="0em">d</mo><mi>𝑹</mi></math><p>The integrand is a <a href="../gauge-connection/index.html">connection</a> on the bundle of eigenstates, so <math><msub><mi>𝛾</mi><mi>𝑛</mi></msub></math> is the holonomy of that connection, the abelian version of a <a href="../wilson-loop/index.html">Wilson loop</a>. By Stokes,</p><math display="block"><msub><mi>𝛾</mi><mi>𝑛</mi></msub><mrow><mo stretchy="false">(</mo><mi>𝐶</mi><mo stretchy="false">)</mo></mrow><mo>=</mo><msub><mo form="prefix" lspace="0em">∫</mo><mi>𝑆</mi></msub><msub><mi>𝛀</mi><mi>𝑛</mi></msub><mo lspace="0.2222222222222222em" rspace="0em">⋅</mo><mspace width="0.1667em"/><mo form="prefix" lspace="0em" rspace="0em">d</mo><mi>𝑺</mi><mo rspace="0em">,</mo><mspace width="1em"/><msub><mi>𝛀</mi><mi>𝑛</mi></msub><mo>=</mo><msub><mo form="prefix">∇</mo><mi>𝑹</mi></msub><mo lspace="0.2222222222222222em" rspace="0.2222222222222222em">×</mo><msub><mi>𝑨</mi><mi>𝑛</mi></msub></math></article><aside class="backlinks"><h2>Linked from</h2><ul><li><a href="../../blog/math-in-the-browser/index.html">Math in the browser, straight from Typst</a></li><li><a href="../gauge-connection/index.html">Gauge connection</a></li></ul></aside><div class="local-graph" data-slug="berry-phase"></div></main><footer class="site-footer">© 2026 Lucien · <a href="/feed.xml">RSS</a></footer></body></html>
