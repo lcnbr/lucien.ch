@@ -3,10 +3,17 @@
 #import "/lib/figures.typ": diagram-frame, svg-math
 
 #show: post.with(
-  title: [Math in the browser, straight from Typst],
-  summary: "A test page for MathML output: integrals, aligned systems, matrices, bra-kets and a hand-drawn plot.",
+  title: [A very easily editable blog, with typst],
+  summary: "I created this blog / personal site, so that editing / creating is really easy",
   tags: ("meta", "typst"),
 )
+
+I've been wanting to have a personal site for a long time. I've always been very particular in my choice of tech stack, and I had never found anything that felt perfect, until now! This site ticks every box. 
+
+ - Typst as the content. I've been a fan of typst the moment I heard of it (4 years now!). It is the modern Latex, better in every way, extensible etc.
+ - Static-CMS.  Static sites are great, free to host on many platforms, but there was always some friction to actually producing content. Here I can (and you can) edit in the browser, from anywhere and see it live in the website.
+
+
 
 Every equation on this page is written in Typst and exported as native MathML.
 No JavaScript renders it; the browser does, using the same New Computer Modern
