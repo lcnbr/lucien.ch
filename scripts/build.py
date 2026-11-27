@@ -101,6 +101,9 @@ def page_entries() -> tuple[list[dict], list[str]]:
         "posts": lambda slug: f"blog/{slug}",
         "garden": lambda slug: f"garden/{slug}",
         "pages": lambda slug: slug,
+        # The thesis: content/thesis/index.typ is /thesis/ (slug "thesis"),
+        # content/thesis/<stem>.typ is /thesis/<stem>/ (slug "thesis-<stem>").
+        "thesis": lambda slug: "thesis" if slug == "thesis" else "thesis/" + slug.removeprefix("thesis-"),
     }
     for section, prefix in sections.items():
         for path in sorted((CONTENT / section).glob("*.typ")):
@@ -112,6 +115,8 @@ def page_entries() -> tuple[list[dict], list[str]]:
                     sys.exit(f"error: post {path} must be named YYYY-MM-DD-slug.typ")
                 post_date, stem = m.groups()
             slug = stem
+            if section == "thesis":
+                slug = "thesis" if stem == "index" else f"thesis-{stem}"
             if not SLUG.match(slug):
                 sys.exit(f"error: {path}: slug '{slug}' must be lowercase letters, digits and dashes")
             if slug in seen:
