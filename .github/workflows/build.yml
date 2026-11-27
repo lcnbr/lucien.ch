@@ -62,3 +62,22 @@ jobs:
           npx --yes wrangler@4 pages deploy dist
           --project-name lucien-ch
           --branch ${{ github.head_ref || github.ref_name }}
+
+      # Private drafts site: everything above plus pages marked `draft: true`,
+      # behind a password (the DRAFTS_PASSWORD repo secret). Its own Pages
+      # project, so nothing from it can end up on the public one. Not uploaded
+      # as an artifact: artifacts of a public repo can be downloaded by anyone.
+      # Without DRAFTS_PASSWORD the site deploys locked and refuses everyone.
+      - name: Build drafts site
+        env:
+          DRAFTS_PASSWORD: ${{ secrets.DRAFTS_PASSWORD }}
+        run: python3 scripts/build.py --search --editor --drafts --out dist-drafts
+      - name: Create Cloudflare Pages project for drafts
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: npx --yes wrangler@4 pages project create lucien-ch-drafts --production-branch main || echo "Project already exists (or see the deploy step for errors)."
+      - name: Deploy drafts site to Cloudflare Pages
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: >
+          npx --yes wrangler@4 pages deploy dist-drafts
+          --project-name lucien-ch-drafts
+          --branch ${{ github.head_ref || github.ref_name }}

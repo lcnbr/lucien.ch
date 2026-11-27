@@ -46,6 +46,8 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
 - **Numbered equations:** `#set math.equation(numbering: "(1)")`, label with
   `<eq-name>`, refer with `@eq-name`. Numbers restart on every page.
 - **Awkward equation:** `#svg-math[$ ... $]` renders one equation as SVG.
+- **Drafts:** add `draft: true` to the template call (`post.with`, `note.with`
+  or `page.with`). See [Drafts](#drafts).
 - **Data for plots:** put CSV/JSON in `data/` and read it with `csv("/data/...")`.
 
 ## How it fits together
@@ -64,6 +66,31 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
   `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets are set.
 
 Typst's HTML and bundle export are experimental, so the Typst version is pinned.
+
+## Drafts
+
+A post, note or page with `draft: true` in its `#show: ….with(...)` call is
+left out of the public build completely: no page at its URL, not in the blog,
+garden, tag or home lists, not in search, the graph, backlinks or `feed.xml`,
+and not in the editor's built-in snapshot. A public page that links to it with
+`#n(<slug>)` keeps the words but loses the link.
+
+CI also builds a second, private site with drafts included (marked with a
+"draft" badge) and deploys it to its own Cloudflare Pages project,
+`lucien-ch-drafts` (https://lucien-ch-drafts.pages.dev, PR previews at
+`<branch>.lucien-ch-drafts.pages.dev`). Every request there needs a password:
+set it as the `DRAFTS_PASSWORD` repository secret (any user name works in the
+browser prompt). Without the secret the drafts site refuses everyone.
+
+`scripts/build.py` finds drafts by reading the template call before compiling;
+the templates check again during the compile and stop the public build if a
+draft got through, so a miss fails the build instead of publishing.
+
+Locally: `python3 scripts/build.py --drafts` builds the drafts site into
+`dist/` (add `--out dist-drafts` to keep both).
+
+The source files themselves are as visible as the repository: while it is
+public, anyone can read a draft's `.typ` file on GitHub.
 
 ## Fonts
 
