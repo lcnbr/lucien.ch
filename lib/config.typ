@@ -17,6 +17,7 @@
     (label: "Blog", target: <blog>),
     (label: "Garden", target: <garden>),
     (label: "CV", target: <cv>),
+    (label: "Blogroll", target: <blogroll>),
     (label: "About", target: <about>),
   ),
 )

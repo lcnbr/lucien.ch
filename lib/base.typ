@@ -8,6 +8,7 @@
     html.a(href: "/blog/", "Blog")
     html.a(href: "/garden/", "Garden")
     html.a(href: "/cv/", "CV")
+    html.a(href: "/blogroll/", "Blogroll")
     html.a(href: "/about/", "About")
     // Opens the search overlay (assets/search.js); also Ctrl/⌘ K or "/".
     html.button(class: "search-open", type: "button", aria-label: "Search", {
