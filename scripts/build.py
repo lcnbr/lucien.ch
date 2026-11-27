@@ -254,6 +254,13 @@ def write_drafts_gate() -> None:
           "LOCKED (DRAFTS_ACCESS_TEAM not set)"))
 
 
+def write_cors_headers() -> None:
+    """Let giscus' iframe (giscus.app) load the comments theme and its fonts."""
+    with open(DIST / "_headers", "a") as f:
+        for path in ("/assets/giscus.css", "/assets/fonts/*"):
+            f.write(f"{path}\n  Access-Control-Allow-Origin: *\n")
+
+
 def build_editor() -> None:
     """Copy editor/ to dist/edit/ and vendor the compiler, fonts and packages."""
     out = DIST / "edit"
@@ -381,6 +388,9 @@ def main() -> None:
 
     if args.editor and not args.watch:
         build_editor()
+
+    if not args.watch:
+        write_cors_headers()
 
     if DRAFTS and not args.watch:
         write_drafts_gate()
