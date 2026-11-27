@@ -38,6 +38,9 @@
       if (v) el.setAttribute(attr, new URL(v, base).href);
     });
     node.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
+    // Sidenotes aren't shown in previews; leaving them in would also match the
+    // page's body:has(.sidenote) layout rule and shift the page sideways.
+    node.querySelectorAll(".sidenote").forEach(el => el.remove());
     return node;
   }
 
