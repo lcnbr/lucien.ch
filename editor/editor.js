@@ -6,7 +6,9 @@
 // a fine-grained token kept in this browser.
 import {
   EditorView, EditorState, basicSetup, keymap, indentWithTab, typst, typstTags,
-  HighlightStyle, syntaxHighlighting, tags as t, setDiagnostics, lintGutter,
+  HighlightStyle, syntaxHighlighting, tags as t, setDiagnostics, lintGutter, Compartment,
+  LSPClient, LSPPlugin, Workspace, serverCompletion, hoverTooltips, signatureHelp,
+  jumpToDefinition, jumpToDefinitionKeymap,
 } from "./vendor/codemirror.js";
 import { createTypstCompiler } from "typst-wasm";
 import { createWebWorker } from "typst-wasm/worker/browser";
@@ -260,10 +262,18 @@ async function compile() {
   if (!ready || !current) return;
   const seq = ++compileSeq, t0 = performance.now();
   if (!compiled) step("Compiling the page");
-  await compiler.addSource(current, withLabelStubs(current, view.state.doc.toString()));
+  // Editing a template or library file (say, after jumping to a definition)
+  // keeps previewing the last page.
+  const main = isPage(current) ? current : pageMain;
+  if (!main) return;
+  await compiler.addSource(current, isPage(current) ? withLabelStubs(current, view.state.doc.toString()) : view.state.doc.toString());
+  if (main !== current) {
+    const f = files.get(main), draft = store.getDraft(main);
+    await compiler.addSource(main, withLabelStubs(main, draft ?? f.text));
+  }
   let result;
   try {
-    result = await compiler.compile({ format: "html", main: current, inputs: { preview: "true" } });
+    result = await compiler.compile({ format: "html", main, inputs: { preview: "true" } });
   } catch (e) {
     if (!compiled) step("");
     if (seq === compileSeq) { showDiagnostics(e.diagnostics || [{ severity: "error", message: e.message }]); setStatus("The page has errors (see below)", "error"); }
@@ -315,6 +325,111 @@ function showDiagnostics(list) {
     });
     return li;
   }));
+}
+
+// ---- language server (tinymist) ---------------------------------------------
+// Tinymist runs in lsp-worker.js. It gives completion with docs, hover info,
+// signature help and go-to-definition (F12 or Ctrl/⌘-click); errors still come
+// from the real compiler. It loads after the preview is up and is optional:
+// without it the editor works as before.
+const LSP_ROOT = "file:///site/";
+const lspSlot = new Compartment();
+let lsp = null;
+
+class SiteWorkspace extends Workspace {
+  files = [];
+  versions = Object.create(null);
+  nextVersion(uri) { return this.versions[uri] = (this.versions[uri] ?? -1) + 1; }
+  syncFiles() {
+    const out = [];
+    for (const file of this.files) {
+      const plugin = LSPPlugin.get(file.view);
+      if (!plugin) continue;
+      const changes = plugin.unsyncedChanges;
+      if (changes.empty) continue;
+      out.push({ changes, file, prevDoc: file.doc });
+      file.doc = file.view.state.doc; file.version = this.nextVersion(file.uri);
+      plugin.clear();
+    }
+    return out;
+  }
+  openFile(uri, languageId, view) {
+    this.files = this.files.filter(f => f.uri !== uri);
+    const file = { uri, languageId, version: this.nextVersion(uri), doc: view.state.doc, view, getView() { return this.view; } };
+    this.files.push(file);
+    this.client.didOpen(file);
+  }
+  closeFile(uri) {
+    if (!this.getFile(uri)) return;
+    this.files = this.files.filter(f => f.uri !== uri);
+    this.client.didClose(uri);
+  }
+  // Go-to-definition into another site file opens it in the editor.
+  async displayFile(uri) {
+    if (!uri.startsWith(LSP_ROOT)) return null;
+    const path = decodeURIComponent(uri.slice(LSP_ROOT.length));
+    if (!files.has(path)) return null;
+    if (path !== current) await open(path);
+    return view;
+  }
+}
+
+function lspExtensions() {
+  return lsp && current ? [lsp.plugin(LSP_ROOT + current, "typst")] : [];
+}
+
+async function startLanguageServer() {
+  const lspStatus = $("lsp");
+  const show = (text, kind = "") => { if (lspStatus) { lspStatus.textContent = text; lspStatus.className = "lsp " + kind; } };
+  let pkgs = [];
+  try { const r = await fetch(new URL("packages/index.json", VENDOR)); if (r.ok) pkgs = await r.json(); } catch {}
+  const wasm = new URL("tinymist/tinymist_bg.wasm.gz", VENDOR).href;
+  // Only when the build shipped tinymist (a missing file can come back as the
+  // site's index page, so check the type).
+  const probe = await fetch(new URL("tinymist/tinymist.js", VENDOR), { method: "HEAD" }).catch(() => null);
+  if (!probe || !probe.ok || !/javascript/.test(probe.headers.get("content-type") || "")) { show(""); return; }
+  show("tinymist…", "busy");
+  const t0 = performance.now();
+  const worker = new Worker(new URL("./lsp-worker.js", import.meta.url), { type: "module" });
+  const handlers = new Set();
+  const started = new Promise((resolve, reject) => {
+    worker.addEventListener("message", ({ data }) => {
+      if (data.rpc !== undefined) for (const h of handlers) h(data.rpc);
+      else if (data.status === "ready") resolve(data);
+      else if (data.status === "error") reject(new Error(data.error));
+    });
+    worker.addEventListener("error", e => reject(new Error(e.message || "worker failed")));
+  });
+  const sources = new Map(Object.entries(otherPages));
+  for (const [path, f] of files) if (f.text !== undefined && /\.(typ|toml|csv|json|bib|ya?ml|txt)$/.test(path)) sources.set(path, path === current ? view.state.doc.toString() : f.text);
+  worker.postMessage({ setup: {
+    files: [...sources].map(([path, text]) => ({ path, text })),
+    packages: pkgs.map(p => new URL("packages/" + p, VENDOR).href),
+    wasm,
+  } });
+  lsp = new LSPClient({
+    rootUri: LSP_ROOT,
+    workspace: c => new SiteWorkspace(c),
+    timeout: 10000,
+    extensions: [
+      serverCompletion({ override: true }), hoverTooltips(), signatureHelp(),
+      keymap.of(jumpToDefinitionKeymap),
+    ],
+  }).connect({
+    send: m => worker.postMessage({ rpc: m }),
+    subscribe: h => handlers.add(h),
+    unsubscribe: h => handlers.delete(h),
+  });
+  try {
+    await Promise.all([lsp.initializing, started]);
+  } catch (e) {
+    console.warn("[edit] tinymist unavailable:", e);
+    lsp = null; show("tinymist off", "off"); worker.terminate();
+    return;
+  }
+  console.info(`[edit] tinymist ${Math.round(performance.now() - t0)} ms`);
+  show("tinymist", "on");
+  if (view && current) view.dispatch({ effects: lspSlot.reconfigure(lspExtensions()) });
 }
 
 // ---- editor ------------------------------------------------------------------
@@ -387,15 +502,22 @@ function urlFor(path) {
   return "/";
 }
 
+const isPage = p => p.startsWith("content/") && p.endsWith(".typ");
+let pageMain = null; // the page the preview shows
+
 async function open(path) {
   if (!files.has(path)) return;
   setStatus("Opening…", "busy");
   const f = await loadFile(path);
   current = path;
+  if (isPage(path)) pageMain = path;
+  if (![...ui.file.options].some(o => o.value === path)) {
+    const o = document.createElement("option"); o.value = o.textContent = path; ui.file.append(o);
+  }
   const draft = store.getDraft(path);
   const text = draft !== null && draft !== f.saved ? draft : f.text;
   view.setState(EditorState.create({ doc: text, extensions: extensions() }));
-  ui.file.value = path; ui.view.href = siteHref(urlFor(path));
+  ui.file.value = path; if (pageMain) ui.view.href = siteHref(urlFor(pageMain));
   if (!EMBED && !compiled && files.get(path).sha !== null) ui.preview.src = siteHref(urlFor(path));
   if (hashPath() !== path) history.replaceState(null, "", HASH + path);
   refreshDirty();
@@ -405,7 +527,20 @@ async function open(path) {
 
 function extensions() {
   return [
-    basicSetup, typst(), editorTheme, typstColours, lintGutter(), keymap.of([indentWithTab, { key: "Mod-s", preventDefault: true, run: () => { save(); return true; } }]),
+    basicSetup, typst(), editorTheme, typstColours, lintGutter(), lspSlot.of(lspExtensions()),
+    // Ctrl/⌘-click jumps to a definition (with tinymist running).
+    EditorView.domEventHandlers({
+      mousedown(e, v) {
+        if (!lsp || !(e.metaKey || e.ctrlKey) || e.button !== 0) return false;
+        const pos = v.posAtCoords({ x: e.clientX, y: e.clientY });
+        if (pos == null) return false;
+        v.dispatch({ selection: { anchor: pos } });
+        jumpToDefinition(v);
+        e.preventDefault();
+        return true;
+      },
+    }),
+    keymap.of([indentWithTab, { key: "Mod-s", preventDefault: true, run: () => { save(); return true; } }]),
     EditorView.lineWrapping,
     EditorView.updateListener.of(u => {
       if (!u.docChanged) return;
@@ -416,7 +551,7 @@ function extensions() {
 }
 
 function fillFileList() {
-  const paths = [...files.keys()].filter(p => p.startsWith("content/") && p.endsWith(".typ")).sort();
+  const paths = [...files.keys()].filter(isPage).sort();
   ui.file.replaceChildren(...paths.map(p => { const o = document.createElement("option"); o.value = p; o.textContent = p; return o; }));
 }
 
@@ -532,6 +667,8 @@ window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault()
   for (const path of files.keys()) if (files.get(path).loaded) await pushToCompiler(path);
   ready = true;
   scheduleCompile(0);
+  // The language server is extra: start it once the preview is on its way.
+  setTimeout(() => startLanguageServer().catch(e => console.warn("[edit] tinymist:", e)), 500);
   if (snapshot) setTimeout(() => {
     if (!ui.status.classList.contains("error"))
       setStatus(`Built-in copy from ${snapshot.built}${fallbackReason ? " (GitHub: " + fallbackReason + ")" : ""} · edits preview live but can't be saved`);

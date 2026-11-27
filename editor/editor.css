@@ -90,6 +90,19 @@ button.quiet { border-color: transparent; color: var(--muted); }
 .status.error { color: var(--error); }
 .status.error::before { background: var(--error); }
 @keyframes pulse { 50% { opacity: 0.3; } }
+.lsp { color: var(--muted); white-space: nowrap; }
+.lsp:empty { display: none; }
+.lsp.busy { animation: pulse 1s ease-in-out infinite; }
+.lsp.on::before { content: "● "; color: var(--ok); }
+.lsp.off { text-decoration: line-through; }
+.cm-lsp-documentation { font-family: system-ui, sans-serif; font-size: 13px; max-width: 46em; }
+.cm-lsp-documentation pre, .cm-lsp-documentation code { font-family: var(--mono); font-size: 12px; }
+.cm-lsp-documentation h1, .cm-lsp-documentation h2, .cm-lsp-documentation h3,
+.cm-lsp-documentation h4 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: .9em 0 .3em; }
+.cm-lsp-documentation p { margin: .3em 0; }
+.cm-lsp-documentation pre { margin: .3em 0; white-space: pre-wrap; }
+.cm-tooltip-hover { max-height: 22em; overflow: auto; padding: 4px 10px; border-radius: 8px; }
+.cm-tooltip-autocomplete .cm-completionDetail { display: inline-block; max-width: 22em; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
 .view { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; white-space: nowrap; }
 .view:hover { color: var(--accent); }
 .view svg { width: 13px; height: 13px; }
