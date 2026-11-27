@@ -48,6 +48,9 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
 - **Awkward equation:** `#svg-math[$ ... $]` renders one equation as SVG.
 - **Drafts:** add `draft: true` to the template call (`post.with`, `note.with`
   or `page.with`). See [Drafts](#drafts).
+- **Footnotes:** `#footnote[...]` becomes a Tufte-style sidenote in the right
+  margin on wide screens, and a tap-to-unfold note on phones. Keep them inline
+  (no display math or paragraphs inside).
 - **Data for plots:** put CSV/JSON in `data/` and read it with `csv("/data/...")`.
 
 ## How it fits together
@@ -96,9 +99,10 @@ One-time setup (free Cloudflare Zero Trust plan):
 3. Zero Trust → Access → Applications → Add → Self-hosted. Hostnames
    `lucien-ch-drafts.pages.dev` and `*.lucien-ch-drafts.pages.dev`, login
    method GitHub only. Policy: Allow, include Emails → your GitHub email.
-4. The team name (`lcnbr`) is set in the workflow. Optionally, pin the Access
-   application too: set its **Application Audience (AUD) tag** as the
-   `DRAFTS_ACCESS_AUD` [Actions variable](https://github.com/lcnbr/lucien.ch/settings/variables/actions).
+4. The team name (`lcnbr`) and the application's audience (AUD) tag are set
+   in the workflow; the `DRAFTS_ACCESS_TEAM` / `DRAFTS_ACCESS_AUD`
+   [Actions variables](https://github.com/lcnbr/lucien.ch/settings/variables/actions)
+   override them. The AUD tag is the `kid=` value in the Access login URL.
 
 `scripts/build.py` finds drafts by reading the template call before compiling;
 the templates check again during the compile and stop the public build if a
