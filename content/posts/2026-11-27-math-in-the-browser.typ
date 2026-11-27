@@ -69,3 +69,6 @@ The geometric phase picked up around a closed loop is treated in the
 If a browser ever draws an equation badly, `svg-math` renders that one as SVG:
 
 #svg-math[$ Z = integral cal(D) phi.alt thin exp(-integral dif^d x [1/2 (partial phi.alt)^2 + V(phi.alt)]) $]
+
+
+and now this is neat! This is really cool!!
