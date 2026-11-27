@@ -85,7 +85,7 @@
   let thesis = theses.at(key)
   let ch = thesis.chapters.find(c => c.number == number)
   page(title: [#number. #ch.title], summary: summary,
-    meta: [Chapter #number of #xref(label(key))[#thesis.title] · #thesis.degree, #thesis.school, #thesis.date · #link(thesis.pdf)[PDF]],
+    meta: [Chapter #number of #thesis.chapters.len() · #thesis.degree, #thesis.school, #thesis.date · #link(thesis.pdf)[PDF]],
   {
     counter(heading).update(0)
     set heading(numbering: (..n) => str(number) + "." + n.pos().map(str).join("."))
