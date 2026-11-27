@@ -25,6 +25,7 @@ applies a small MathML fix-up (see below).
 | Blog post | `content/posts/YYYY-MM-DD-slug.typ` | `/blog/slug/` |
 | Garden note | `content/garden/slug.typ` | `/garden/slug/` |
 | Page | `content/pages/slug.typ` | `/slug/` |
+| Thesis chapter | `content/thesis/slug.typ` (landing: `index.typ`) | `/thesis/slug/` |
 
 ```typst
 #import "/lib/post.typ": post        // or note.typ / page.typ
