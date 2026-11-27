@@ -54,6 +54,35 @@
   html.ul(class: "list", ms.map(m => if m.kind == "post" { post-item(m) } else if m.kind == "note" { note-item(m) } else { html.li(link(label(m.slug), m.title)) }).join())
 })
 
+// Blogroll: the newest posts of the blogs in blogroll.txt, fetched at build
+// time by scripts/blogroll.py into build/blogroll.json.
+#let blogroll-page(data) = shell(title: "Blogroll", heading: [Blogroll], description: "Recent posts from blogs I read.", kind: "index", {
+  html.p[Recent posts from blogs I read, newest first. Updated daily from their feeds.]
+  if data.posts.len() == 0 {
+    html.p(class: "meta", [No posts fetched in this build.])
+  } else {
+    html.ul(class: "list blogroll", data.posts.map(p => html.li({
+      html.time(datetime: parse-date(p.date), fmt-date(parse-date(p.date)))
+      [ ]
+      html.a(href: p.url, p.title)
+      [ ]
+      html.span(class: "blogroll-source", {
+        [· ]
+        html.a(href: p.at("blog-url"), p.blog)
+      })
+    })).join())
+  }
+  if data.blogs.len() > 0 {
+    html.h2("Blogs")
+    html.ul(class: "blogroll-blogs", data.blogs.map(b => html.li({
+      html.a(href: b.url, b.title)
+      [ ]
+      html.a(class: "feed-link", href: b.feed, "(feed)")
+    })).join())
+  }
+  if data.fetched != none { html.p(class: "meta", [Fetched #fmt-date(parse-date(data.fetched)).]) }
+})
+
 // --- feeds and data ---------------------------------------------------------
 
 #let xml-escape(s) = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")

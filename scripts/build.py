@@ -11,6 +11,7 @@ Usage:
     python3 scripts/build.py --search   # also run pagefind (needs npx)
     python3 scripts/build.py --editor   # also build the /edit/ page (needs npm)
     python3 scripts/build.py --drafts   # private build: include drafts, behind GitHub login
+    python3 scripts/build.py --offline  # don't fetch the blogroll feeds (reuse the last fetch)
 
 Drafts (`draft: true` in a file's template call) are left out of the normal
 build entirely: no page, no listing, no search entry, no graph node, no feed
@@ -347,6 +348,7 @@ def main() -> None:
     ap.add_argument("--editor", action="store_true")
     ap.add_argument("--drafts", action="store_true", help="include drafts (private build)")
     ap.add_argument("--out", type=Path, help="output directory (default: dist/)")
+    ap.add_argument("--offline", action="store_true", help="don't fetch blogroll feeds")
     args = ap.parse_args()
 
     global DIST, DRAFTS
@@ -362,6 +364,12 @@ def main() -> None:
     print(f"manifest: {len(pages)} pages ({n_drafts} drafts included, {len(hidden)} left out), "
           f"{len(manifest['assets'])} assets")
 
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import blogroll
+    # Feeds for /blogroll/. CI sets BLOGROLL_OFFLINE=1 on the drafts build so it
+    # reuses the public build's fetch.
+    blogroll.write(offline=args.offline or os.environ.get("BLOGROLL_OFFLINE") == "1")
+
     if DIST.exists():
         shutil.rmtree(DIST)
     cmd = ["typst", "watch" if args.watch else "compile",
@@ -371,7 +379,6 @@ def main() -> None:
     subprocess.run(cmd, check=True)
 
     if not args.watch:
-        sys.path.insert(0, str(ROOT / "scripts"))
         from mathml_fix import fix_tree
         print(f"mathml_fix: {fix_tree(DIST)} files changed")
 
