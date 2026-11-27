@@ -57,6 +57,21 @@ async function loadTree() {
   for (const e of tree) files.set(e.path, { sha: e.sha, loaded: false });
 }
 
+// Fallback when GitHub is unreachable (offline, or a sandboxed preview):
+// the sources as of the last build, written by build.py. Read-only.
+let snapshot = null;
+async function loadSnapshot() {
+  const r = await fetch(new URL("./snapshot.json", import.meta.url));
+  if (!r.ok) throw new Error("no snapshot");
+  snapshot = await r.json();
+  for (const [path, v] of Object.entries(snapshot.files)) {
+    const f = { loaded: true };
+    if (typeof v === "string") { f.text = v; f.saved = v; }
+    else f.bytes = Uint8Array.from(atob(v.base64), c => c.charCodeAt(0));
+    files.set(path, f);
+  }
+}
+
 async function loadFile(path) {
   const f = files.get(path);
   if (!f || f.loaded) return f;
@@ -77,6 +92,7 @@ function b64(text) {
 
 async function save() {
   if (!current) return;
+  if (snapshot) { setStatus("Saving needs GitHub; this copy can't reach it. Edits stay in this browser.", "error"); return; }
   if (!store.token) { openSettings(); return; }
   const f = files.get(current), text = view.state.doc.toString();
   ui.save.disabled = true; setStatus("Saving…");
@@ -95,8 +111,33 @@ async function save() {
 }
 
 // ---- compiler ----------------------------------------------------------------
+// Hosts with file-size or file-type limits get the same bytes in another
+// wrapper: <file>.gz (gzip) or <file>.json ({"base64": …}, maybe of the .gz).
+async function fetchWrapped(url, init) {
+  let r = await fetch(url, init);
+  if (r.ok) return r;
+  for (const alt of [url + ".gz", url + ".gz.json", url + ".json"]) {
+    const a = await fetch(alt, init).catch(() => null);
+    if (!a || !a.ok) continue;
+    let bytes = alt.endsWith(".json")
+      ? Uint8Array.from(atob((await a.json()).base64), c => c.charCodeAt(0))
+      : new Uint8Array(await a.arrayBuffer());
+    // Un-gzip unless the file is itself a gzip archive (.tar.gz) or the host already did.
+    if (alt.includes(".gz") && !/\.tar\.gz$/.test(url) && bytes[0] === 0x1f && bytes[1] === 0x8b)
+      bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer());
+    return new Response(bytes, { status: 200 });
+  }
+  return r;
+}
+
+async function loadWasm(url) {
+  const r = await fetchWrapped(url);
+  if (!r.ok) throw new Error(`can't load ${url}: ${r.status}`);
+  if (/wasm/.test(r.headers.get("content-type") || "")) return WebAssembly.compileStreaming(r);
+  return WebAssembly.compile(await r.arrayBuffer());
+}
 async function startCompiler() {
-  const core = name => WebAssembly.compileStreaming(fetch(new URL(`typst-wasm/engine/${name}`, VENDOR)));
+  const core = name => loadWasm(new URL(`typst-wasm/engine/${name}`, VENDOR).href);
   const ourPackages = new URL("packages", VENDOR).href;
   compiler = await createTypstCompiler({
     // Worker backend when the page is cross-origin isolated (see _headers), JSPI otherwise.
@@ -107,8 +148,9 @@ async function startCompiler() {
     // Packages the site uses are mirrored next to the editor at build time;
     // anything else comes from the official registry.
     fetch: async (url, init) => {
-      const r = await fetch(url, init);
-      if (r.ok || !String(url).startsWith(ourPackages)) return r;
+      if (!String(url).startsWith(ourPackages)) return fetch(url, init);
+      const r = await fetchWrapped(String(url), init);
+      if (r.ok) return r;
       return fetch(String(url).replace(ourPackages, OFFICIAL_PACKAGES), init);
     },
   });
@@ -145,7 +187,11 @@ async function compile() {
 function showPreview(html) {
   const win = ui.preview.contentWindow, y = win ? win.scrollY : 0;
   ui.preview.onload = () => { try { ui.preview.contentWindow.scrollTo(0, y); } catch {} };
-  ui.preview.srcdoc = html.replace("<head>", '<head><base target="_blank">');
+  // Site-absolute paths (/assets/style.css, /blog/…) resolve from the site root,
+  // which is the editor's parent directory, wherever the site is served from.
+  const root = new URL("../", import.meta.url).href;
+  ui.preview.srcdoc = html.replace("<head>", '<head><base target="_blank">')
+    .replace(/(\s(?:href|src))="\/(?!\/)/g, `$1="${root}`);
 }
 
 function showDiagnostics(list) {
@@ -173,7 +219,15 @@ function refreshDirty() {
   ui.save.disabled = !dirty;
   const opt = [...ui.file.options].find(o => o.value === current);
   if (opt) opt.textContent = (dirty ? "● " : "") + current;
-  if (dirty && !/Saving/.test(ui.status.textContent)) setStatus(store.token ? "Unsaved changes" : "Unsaved changes · add a GitHub token to save", "dirty");
+  if (dirty && !/Saving/.test(ui.status.textContent)) setStatus(snapshot ? "Edited · preview only, kept in this browser" : store.token ? "Unsaved changes" : "Unsaved changes · add a GitHub token to save", "dirty");
+}
+
+// A site path as a link from here; adds index.html where the host needs it
+// (i.e. when this page itself was opened as …/index.html).
+function siteHref(p) {
+  const u = new URL(p.replace(/^\//, ""), new URL("../", import.meta.url));
+  if (/\/index\.html$/.test(location.pathname) && u.pathname.endsWith("/")) u.pathname += "index.html";
+  return u.href;
 }
 
 function urlFor(path) {
@@ -192,7 +246,7 @@ async function open(path) {
   const draft = store.getDraft(path);
   const text = draft !== null && draft !== f.saved ? draft : f.text;
   view.setState(EditorState.create({ doc: text, extensions: extensions() }));
-  ui.file.value = path; ui.view.href = urlFor(path);
+  ui.file.value = path; ui.view.href = siteHref(urlFor(path));
   if (location.hash.slice(1) !== path) history.replaceState(null, "", "#" + path);
   refreshDirty();
   if (draft !== null && draft !== f.saved) setStatus("Restored unsaved changes from this browser", "dirty");
@@ -266,9 +320,13 @@ window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault()
     setStatus("Reading the repository…");
     await loadTree();
   } catch (e) {
-    setStatus(e.status === 404 || e.status === 401 ? "Can't read the repository: add a GitHub token (⚙)" : "Can't reach GitHub: " + e.message, "error");
-    if (e.status === 404 || e.status === 401) openSettings();
-    return;
+    files.clear();
+    try { await loadSnapshot(); }
+    catch {
+      setStatus(e.status === 404 || e.status === 401 ? "Can't read the repository: add a GitHub token (⚙)" : "Can't reach GitHub: " + e.message, "error");
+      if (e.status === 404 || e.status === 401) openSettings();
+      return;
+    }
   }
   fillFileList();
   // Templates and data are small and needed by every page; load them up front.
@@ -279,4 +337,5 @@ window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault()
   setStatus("Starting the Typst compiler (first visit downloads about 10 MB)…");
   try { await startCompiler(); } catch (e) { setStatus("Typst compiler failed to start: " + e.message, "error"); return; }
   scheduleCompile(0);
+  if (snapshot) setTimeout(() => { if (!ui.status.classList.contains("error")) setStatus(`Offline copy from ${snapshot.built} · edits preview live but can't be saved`); }, 1500);
 })();

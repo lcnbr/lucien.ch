@@ -1,11 +1,11 @@
 /* lucien.ch — base styles */
 
-@font-face { font-family: "NewCM"; src: url("/assets/fonts/NewCM10-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "NewCM"; src: url("/assets/fonts/NewCM10-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
-@font-face { font-family: "NewCM"; src: url("/assets/fonts/NewCM10-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
-@font-face { font-family: "NewCM"; src: url("/assets/fonts/NewCM10-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: swap; }
 /* Typst's default math font, so MathML matches the PDF on every OS. */
-@font-face { font-family: "NewCMMath"; src: url("/assets/fonts/NewCMMath-Regular.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "NewCMMath"; src: url("fonts/NewCMMath-Regular.woff2") format("woff2"); font-display: block; }
 
 :root {
   --fg: #1d1d1f;

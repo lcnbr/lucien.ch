@@ -2,9 +2,13 @@
 // <div class="garden-graph" data-graph="/garden/graph.json"> draws every note;
 // <div class="local-graph" data-slug="x"> draws x and its direct neighbours.
 (function () {
+  // Resolve site paths from this script's location (assets/ is at the site root),
+  // so the graph also works when the site is served from a subdirectory.
+  const ROOT = new URL("../", document.currentScript ? document.currentScript.src : location.origin + "/assets/");
+  const site = p => new URL(String(p).replace(/^\//, ""), ROOT).href;
   const targets = [...document.querySelectorAll(".garden-graph, .local-graph")];
   if (!targets.length) return;
-  fetch("/garden/graph.json").then(r => r.json()).then(g => targets.forEach(el => draw(el, g)));
+  fetch(site("garden/graph.json")).then(r => r.json()).then(g => targets.forEach(el => draw(el, g)));
 
   function draw(el, g) {
     let nodes = g.nodes, links = g.links;
@@ -66,6 +70,6 @@
     const pick = e => { const b = canvas.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
       return N.find(n => Math.hypot(n.x - x, n.y - y) < 10) || null; };
     canvas.addEventListener("mousemove", e => { hover = pick(e); canvas.style.cursor = hover ? "pointer" : "default"; render(); });
-    canvas.addEventListener("click", e => { const n = pick(e); if (n) location.href = n.url; });
+    canvas.addEventListener("click", e => { const n = pick(e); if (n) location.href = site(n.url); });
   }
 })();

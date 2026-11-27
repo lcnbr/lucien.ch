@@ -14,6 +14,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import re
 import os
@@ -147,6 +148,18 @@ def build_editor() -> None:
         nt = npm_unpack(f"nanotar@{EDITOR_NPM['nanotar']}", t)
         (vendor / "nanotar").mkdir(exist_ok=True)
         shutil.copy(nt / "dist/index.mjs", vendor / "nanotar/index.mjs")
+    # Snapshot of the sources, used when GitHub's API can't be reached.
+    snap = {}
+    for d in ("content", "lib", "data"):
+        for f in sorted((ROOT / d).rglob("*")):
+            if f.is_file():
+                rel = f.relative_to(ROOT).as_posix()
+                try:
+                    snap[rel] = f.read_text(encoding="utf-8")
+                except UnicodeDecodeError:
+                    snap[rel] = {"base64": base64.b64encode(f.read_bytes()).decode()}
+    (out / "snapshot.json").write_text(json.dumps(
+        {"built": date.today().isoformat(), "files": snap}, ensure_ascii=False))
     # Mirror the Typst packages this build used, so the editor works offline
     # from the registry and with exactly the same versions.
     cache = typst_package_cache()

@@ -1,5 +1,6 @@
 // The HTML shell shared by every page: <head>, site header, footer.
 #import "config.typ": site
+#import "state.typ": current
 
 #let nav-bar() = html.header(class: "site-header", {
   html.a(class: "site-title", href: "/", site.title)
@@ -45,6 +46,16 @@
       html.footer(class: "site-footer", {
         [© #site.author · ]
         html.a(href: "/feed.xml", "RSS")
+        // Link each content page to its source in the browser editor.
+        if kind in ("post", "note", "page") {
+          context {
+            let e = current.get()
+            if type(e) == dictionary and "path" in e {
+              [ · ]
+              html.a(class: "edit-link", href: "/edit/#" + e.path.trim("/", at: start), "Edit")
+            }
+          }
+        }
       })
     })
   })
