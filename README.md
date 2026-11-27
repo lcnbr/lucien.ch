@@ -96,10 +96,9 @@ One-time setup (free Cloudflare Zero Trust plan):
 3. Zero Trust → Access → Applications → Add → Self-hosted. Hostnames
    `lucien-ch-drafts.pages.dev` and `*.lucien-ch-drafts.pages.dev`, login
    method GitHub only. Policy: Allow, include Emails → your GitHub email.
-   Copy the application's **Audience (AUD) tag**.
-4. In the repo's [Actions variables](https://github.com/lcnbr/lucien.ch/settings/variables/actions),
-   set `DRAFTS_ACCESS_TEAM` (the team name) and `DRAFTS_ACCESS_AUD` (the tag),
-   then re-run the workflow.
+4. The team name (`lcnbr`) is set in the workflow. Optionally, pin the Access
+   application too: set its **Application Audience (AUD) tag** as the
+   `DRAFTS_ACCESS_AUD` [Actions variable](https://github.com/lcnbr/lucien.ch/settings/variables/actions).
 
 `scripts/build.py` finds drafts by reading the template call before compiling;
 the templates check again during the compile and stop the public build if a

@@ -67,10 +67,10 @@ jobs:
       # behind Cloudflare Access with GitHub login (README, "Drafts"). Its own
       # Pages project, so nothing from it can end up on the public one. Not
       # uploaded as an artifact: artifacts of a public repo can be downloaded by
-      # anyone. Until the two repo variables are set it deploys locked.
+      # anyone. DRAFTS_ACCESS_AUD (optional) pins the Access application.
       - name: Build drafts site
         env:
-          DRAFTS_ACCESS_TEAM: ${{ vars.DRAFTS_ACCESS_TEAM }}
+          DRAFTS_ACCESS_TEAM: ${{ vars.DRAFTS_ACCESS_TEAM || 'lcnbr' }}
           DRAFTS_ACCESS_AUD: ${{ vars.DRAFTS_ACCESS_AUD }}
         run: python3 scripts/build.py --search --editor --drafts --out dist-drafts
       - name: Create Cloudflare Pages project for drafts
