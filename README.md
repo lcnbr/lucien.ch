@@ -70,3 +70,26 @@ Typst's HTML and bundle export are experimental, so the Typst version is pinned.
 `assets/fonts/` holds New Computer Modern (text subset to Latin and Greek) and
 New Computer Modern Math, converted to WOFF2 from the copies shipped with Typst.
 They are distributed under the GUST Font License.
+
+## Editing in the browser
+
+`/edit/` is a small editor that compiles with Typst in WebAssembly
+(typst-wasm, Typst 0.15.0) and shows the page as it will look on the site.
+
+- Open `https://<site>/edit/`, pick a file (or **New…**), and type. The
+  preview recompiles about 250 ms after you stop; errors are listed under the
+  editor and clicking one jumps to it. Unsaved text is kept in the browser.
+- **Save** commits the file to GitHub, which rebuilds and deploys the site.
+  It needs a fine-grained token (⚙): GitHub → Settings → Developer settings →
+  Fine-grained tokens, repository `lcnbr/lucien.ch` only, permission
+  *Contents: read and write*. The token stays in this browser's localStorage.
+- Packages the site uses are mirrored into `/edit/vendor/packages/` at build
+  time; others are fetched from packages.typst.org.
+- In the preview, garden links point to `#` and backlinks/indexes are not
+  built (only the open file is compiled).
+
+Locally: `python3 scripts/build.py --editor && python3 scripts/serve.py`,
+then open http://localhost:8000/edit/. `serve.py` sends the
+cross-origin-isolation headers (also set for Cloudflare in `dist/_headers`)
+that let the compiler run in a worker; without them it needs a browser with
+JSPI (recent Chrome/Edge).

@@ -43,7 +43,7 @@
         body
       })
       html.footer(class: "site-footer", {
-        [© #datetime.today().year() #site.author · ]
+        [© #site.author · ]
         html.a(href: "/feed.xml", "RSS")
       })
     })
