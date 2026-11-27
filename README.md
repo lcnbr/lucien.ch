@@ -46,6 +46,8 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
 - **Numbered equations:** `#set math.equation(numbering: "(1)")`, label with
   `<eq-name>`, refer with `@eq-name`. Numbers restart on every page.
 - **Awkward equation:** `#svg-math[$ ... $]` renders one equation as SVG.
+- **Drafts:** add `draft: true` to the template call (`post.with`, `note.with`
+  or `page.with`). See [Drafts](#drafts).
 - **Footnotes:** `#footnote[...]` becomes a Tufte-style sidenote in the right
   margin on wide screens, and a tap-to-unfold note on phones. Keep them inline
   (no display math or paragraphs inside).
@@ -67,6 +69,50 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
   `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets are set.
 
 Typst's HTML and bundle export are experimental, so the Typst version is pinned.
+
+## Drafts
+
+A post, note or page with `draft: true` in its `#show: ….with(...)` call is
+left out of the public build completely: no page at its URL, not in the blog,
+garden, tag or home lists, not in search, the graph, backlinks or `feed.xml`,
+and not in the editor's built-in snapshot. A public page that links to it with
+`#n(<slug>)` keeps the words but loses the link.
+
+CI also builds a second, private site with drafts included (marked with a
+"draft" badge) and deploys it to its own Cloudflare Pages project,
+`lucien-ch-drafts` (https://lucien-ch-drafts.pages.dev, PR previews at
+`<branch>.lucien-ch-drafts.pages.dev`). You sign in with GitHub through
+Cloudflare Access, and only the accounts the Access policy allows get in.
+The site's worker also checks Access's signed token on every request, so if
+Access is off or misconfigured the drafts site refuses everyone instead of
+opening up.
+
+One-time setup (free Cloudflare Zero Trust plan):
+
+1. In the [Zero Trust dashboard](https://one.dash.cloudflare.com/), pick a
+   team name (gives `<team>.cloudflareaccess.com`) and the Free plan.
+2. [Create a GitHub OAuth app](https://github.com/settings/applications/new):
+   homepage `https://<team>.cloudflareaccess.com`, callback
+   `https://<team>.cloudflareaccess.com/cdn-cgi/access/callback`. In Zero
+   Trust → Settings → Authentication → Login methods, add GitHub with its
+   client ID and secret.
+3. Zero Trust → Access → Applications → Add → Self-hosted. Hostnames
+   `lucien-ch-drafts.pages.dev` and `*.lucien-ch-drafts.pages.dev`, login
+   method GitHub only. Policy: Allow, include Emails → your GitHub email.
+4. The team name (`lcnbr`) and the application's audience (AUD) tag are set
+   in the workflow; the `DRAFTS_ACCESS_TEAM` / `DRAFTS_ACCESS_AUD`
+   [Actions variables](https://github.com/lcnbr/lucien.ch/settings/variables/actions)
+   override them. The AUD tag is the `kid=` value in the Access login URL.
+
+`scripts/build.py` finds drafts by reading the template call before compiling;
+the templates check again during the compile and stop the public build if a
+draft got through, so a miss fails the build instead of publishing.
+
+Locally: `python3 scripts/build.py --drafts` builds the drafts site into
+`dist/` (add `--out dist-drafts` to keep both).
+
+The source files themselves are as visible as the repository: while it is
+public, anyone can read a draft's `.typ` file on GitHub.
 
 ## Fonts
 

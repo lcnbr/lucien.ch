@@ -9,6 +9,10 @@
   if preview {
     // Single-page preview: other pages are not part of the compile.
     link("#", body)
+  } else if str(target) in json("/build/manifest.json").at("hidden", default: ()) {
+    // A draft left out of this (public) build: keep the words, drop the link
+    // and the edge, so nothing points at it.
+    html.span(class: "draft-link", body)
   } else {
     // The edge metadata sits inside the link body: placed after the link it
     // would make HTML export insert a stray space before punctuation.

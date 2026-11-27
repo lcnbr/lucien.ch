@@ -56,6 +56,9 @@ td, th { padding: 0.3em 0.7em; border-bottom: 1px solid var(--rule); }
 .tag { color: var(--muted); text-decoration: none; }
 .status { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.1em 0.45em; border-radius: 3px; border: 1px solid var(--rule); }
 .status.seedling { color: #8a6d00; } .status.budding { color: #3c7d2a; } .status.evergreen { color: #1b6b52; }
+/* Drafts: only on the private drafts site (scripts/build.py --drafts). */
+.draft-badge { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.1em 0.45em; border-radius: 3px; color: #9a3412; border: 1px dashed currentColor; }
+.draft-banner { color: #9a3412; border: 1px dashed currentColor; border-radius: 4px; padding: 0.4em 0.7em; font-size: 0.9rem; }
 
 .list { list-style: none; padding: 0; }
 .list li { margin: 0.9em 0; }
@@ -210,3 +213,4 @@ html.editing .edit-tab { opacity: 0; pointer-events: none; }
   .search-dialog { margin-top: 1rem; max-height: calc(100% - 2rem); }
 }
 @media (prefers-reduced-motion: reduce) { .search-dialog[open] { animation: none; } }
+@media (prefers-color-scheme: dark) { .draft-badge, .draft-banner { color: #f0a060; } }
