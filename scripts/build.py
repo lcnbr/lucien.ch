@@ -322,6 +322,16 @@ def build_editor() -> None:
     print(f"editor: built dist/edit/ with {n} mirrored Typst packages")
 
 
+def build_cv_pdfs() -> None:
+    """The CV as PDF, one per language, next to the /cv/ page (lib/cv.typ)."""
+    for lang in ("en", "fr"):
+        out = DIST / "cv" / f"lucien-huber-cv-{lang}.pdf"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["typst", "compile", "--root", str(ROOT), "--font-path", str(ROOT / "cv" / "fonts"),
+                        "--input", f"lang={lang}", str(ROOT / "cv" / "cv-pdf.typ"), str(out)], check=True)
+    print("cv: built dist/cv/lucien-huber-cv-{en,fr}.pdf")
+
+
 def vendor_tinymist(dest: Path) -> None:
     """Add the browser build of tinymist (completion, hover, go to definition).
 
@@ -375,6 +385,7 @@ def main() -> None:
     subprocess.run(cmd, check=True)
 
     if not args.watch:
+        build_cv_pdfs()
         sys.path.insert(0, str(ROOT / "scripts"))
         from mathml_fix import fix_tree
         print(f"mathml_fix: {fix_tree(DIST)} files changed")

@@ -53,6 +53,14 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
   (no display math or paragraphs inside).
 - **Data for plots:** put CSV/JSON in `data/` and read it with `csv("/data/...")`.
 
+## CV
+
+`/cv/` shows the CV in English and French with a switch (`/cv/#fr` opens
+the French one). The text of both languages lives in `lib/cv.typ`; the page
+is `content/pages/cv.typ`, and `scripts/build.py` also compiles
+`cv/cv-pdf.typ` into `/cv/lucien-huber-cv-en.pdf` and `-fr.pdf`. Which
+personal details are shown is set by `public` at the top of `lib/cv.typ`.
+
 ## How it fits together
 
 - `site.typ` — bundle entry point: one `document()` per content file, plus the

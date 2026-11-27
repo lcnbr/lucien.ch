@@ -218,3 +218,31 @@ html.editing .edit-tab { opacity: 0; pointer-events: none; }
 .comments { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
 .comments h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-top: 0; }
 @media (prefers-color-scheme: dark) { .draft-badge, .draft-banner { color: #f0a060; } }
+
+/* CV (content/pages/cv.typ): both languages on the page, the switch shows one. */
+.cv-switch { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; padding: 0.15rem; margin: 0.25rem 0 1rem; font-size: 0.9rem; }
+.cv-switch input { position: absolute; opacity: 0; pointer-events: none; }
+.cv-switch label { padding: 0.2rem 0.85rem; border-radius: 999px; cursor: pointer; color: var(--muted); }
+.cv-switch input:checked + label { background: var(--fg); color: var(--bg); }
+.cv-switch input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cv[lang="fr"], article:has(#cv-fr:checked) .cv[lang="en"] { display: none; }
+article:has(#cv-fr:checked) .cv[lang="fr"] { display: block; }
+.cv-head { display: flex; gap: 1.25rem; align-items: center; margin-bottom: 1rem; }
+.cv-photo { width: 96px; height: 128px; object-fit: cover; border-radius: 4px; flex: none; }
+.cv-head p { margin: 0.15rem 0; }
+.cv-name { font-size: 1.5rem; font-weight: 700; }
+.cv-pdf a { font-size: 0.95rem; }
+.cv h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--rule); }
+.cv-list { list-style: none; padding: 0; margin: 0; }
+.cv-entry { display: grid; grid-template-columns: 9.5rem 1fr; gap: 0 1rem; margin: 0 0 1rem; }
+.cv-when { color: var(--muted); font-size: 0.88em; font-variant-numeric: tabular-nums; padding-top: 0.12em; }
+.cv-what p { margin: 0.1rem 0 0; }
+.cv-title { display: flex; justify-content: space-between; gap: 0.5rem 1rem; flex-wrap: wrap; }
+.cv-where { color: var(--muted); font-style: italic; }
+@media (max-width: 600px) {
+  .cv-entry { grid-template-columns: 1fr; }
+  .cv-photo { width: 72px; height: 96px; }
+}
+@media print {
+  .site-header, .site-footer, .cv-switch, .cv-pdf { display: none; }
+}
