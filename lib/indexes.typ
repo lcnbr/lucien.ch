@@ -69,12 +69,3 @@
     links: all-edges().filter(e => e.from in slugs and e.to in slugs).map(e => (source: e.from, target: e.to)),
   )
 }
-
-// Search page. The index and UI files are written by Pagefind after the Typst
-// build (scripts/build.py --search); without them the page shows a notice.
-#let search-page() = shell(title: "Search", heading: [Search], kind: "search", {
-  html.link(rel: "stylesheet", href: "/pagefind/pagefind-ui.css")
-  html.script(src: "/pagefind/pagefind-ui.js", "")
-  html.div(id: "search", html.p[Search needs the Pagefind index, which is built in CI.])
-  html.script("window.addEventListener('DOMContentLoaded', () => { if (window.PagefindUI) { document.getElementById('search').textContent = ''; new PagefindUI({ element: '#search', showSubResults: true }); } });")
-})

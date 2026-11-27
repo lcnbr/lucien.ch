@@ -3,7 +3,7 @@
 //   python3 scripts/build.py          (writes build/manifest.json, then compiles)
 //   typst compile --features html,bundle --format bundle site.typ dist
 #import "lib/state.typ": current
-#import "lib/indexes.typ": home, blog-index, garden-index, tag-page, all-tags, rss, graph-data, search-page
+#import "lib/indexes.typ": home, blog-index, garden-index, tag-page, all-tags, rss, graph-data
 
 #let manifest = json("build/manifest.json")
 
@@ -25,7 +25,6 @@
 #document("index.html", home()) <home>
 #document("blog/index.html", blog-index()) <blog>
 #document("garden/index.html", garden-index()) <garden>
-#document("search/index.html", search-page()) <search>
 
 #context for tag in all-tags() {
   document("tags/" + tag + "/index.html", tag-page(tag))
