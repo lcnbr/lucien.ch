@@ -102,6 +102,40 @@ td, th { padding: 0.3em 0.7em; border-bottom: 1px solid var(--rule); }
 .equation > math { flex: 1; }
 .equation > .eq-num { color: var(--muted); font-variant-numeric: tabular-nums; }
 
+/* Sidenotes (lib/base.typ): footnotes in the margin, Tufte style.
+   Narrow screens: the number is a toggle that unfolds the note below the line. */
+:root { --sn-w: 15rem; --sn-gap: 2.25rem; }
+section[role="doc-endnotes"] { display: none; }
+.sidenote-number { cursor: pointer; color: var(--accent); padding: 0 0.1em; }
+.sidenote-number sup, .sidenote-mark { font-size: 0.7em; line-height: 0; font-variant-numeric: lining-nums; }
+.sidenote-number:has(+ .sidenote-toggle:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
+.sidenote-toggle { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.sidenote {
+  display: none; float: left; clear: both; width: 100%; margin: 0.5rem 0 0.75rem; padding: 0.5rem 0.9rem;
+  font-size: 0.85rem; line-height: 1.45; text-align: left; color: var(--fg);
+  border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--fg) 3%, transparent);
+}
+.sidenote-mark { color: var(--muted); margin-right: 0.15em; }
+.sidenote-toggle:checked + .sidenote { display: block; }
+.sidenote math { font-size: 1em; }
+/* Previews of other pages (hover.js) strip ids, so their toggles would be dead. */
+.hover-card .sidenote, .window .sidenote { display: none !important; }
+.hover-card .sidenote-number, .window .sidenote-number { pointer-events: none; color: inherit; }
+
+/* Wide screens: notes sit in the right margin beside the line that cites them,
+   and the column shifts left so text and margin are centred together. */
+@media (min-width: 1100px) {
+  html:not(.editing) body:has(.sidenote) :is(main, .site-header, .site-footer) {
+    margin-left: max(0px, calc((100% - var(--measure) - var(--sn-gap) - var(--sn-w)) / 2));
+  }
+  html:not(.editing) .sidenote {
+    display: block; float: right; clear: right; width: var(--sn-w); padding: 0; border: 0; background: none;
+    margin: 0.3rem calc(-1 * (var(--sn-w) + var(--sn-gap))) 0.6rem 0; color: var(--muted);
+  }
+  html:not(.editing) .sidenote-number { cursor: default; }
+  html:not(.editing) .sidenote-toggle { display: none; }
+}
+
 /* Edit in place (edit.js): the editor docks on the right and the page reflows. */
 :root { --edit-w: min(46vw, 760px); --edit-ease: cubic-bezier(0.2, 0.8, 0.2, 1); }
 html { transition: padding 360ms var(--edit-ease); }

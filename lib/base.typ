@@ -29,6 +29,19 @@
       })
     } else { it }
   }
+  // Footnotes become Tufte-style sidenotes (styled in assets/style.css): a
+  // margin note on wide screens, a tap-to-unfold note on narrow ones. The
+  // label/checkbox pair needs no JavaScript. Typst still emits its endnote
+  // list; the entries are dropped and the empty list is hidden by CSS.
+  show footnote.entry: it => if target() == "html" { none } else { it }
+  show footnote: it => {
+    if target() != "html" { return it }
+    let num = counter(footnote).display(it.numbering)
+    let id = "sn-" + str(counter(footnote).get().first())
+    html.elem("label", attrs: ("for": id, class: "sidenote-number", aria-label: "Note " + num), html.sup(num))
+    html.input(type: "checkbox", id: id, class: "sidenote-toggle")
+    html.span(class: "sidenote", role: "note", { html.sup(class: "sidenote-mark", num); [ ]; it.body })
+  }
   html.html(lang: site.lang, {
     html.head({
       html.meta(charset: "utf-8")

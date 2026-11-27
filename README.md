@@ -46,6 +46,9 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
 - **Numbered equations:** `#set math.equation(numbering: "(1)")`, label with
   `<eq-name>`, refer with `@eq-name`. Numbers restart on every page.
 - **Awkward equation:** `#svg-math[$ ... $]` renders one equation as SVG.
+- **Footnotes:** `#footnote[...]` becomes a Tufte-style sidenote in the right
+  margin on wide screens, and a tap-to-unfold note on phones. Keep them inline
+  (no display math or paragraphs inside).
 - **Data for plots:** put CSV/JSON in `data/` and read it with `csv("/data/...")`.
 
 ## How it fits together
