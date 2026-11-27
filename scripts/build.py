@@ -120,7 +120,11 @@ def npm_unpack(spec: str, dest: Path) -> Path:
                          capture_output=True, text=True, check=True).stdout.strip().splitlines()[-1]
     target = dest / spec.replace("/", "__").replace("@", "")
     with tarfile.open(dest / out) as tar:
-        tar.extractall(target, filter="data")
+        # filter= needs Python 3.12+ (or a 3.9-3.11 security backport).
+        if hasattr(tarfile, "data_filter"):
+            tar.extractall(target, filter="data")
+        else:
+            tar.extractall(target)
     return target / "package"
 
 
@@ -131,11 +135,15 @@ def build_editor() -> None:
     vendor = out / "vendor"
     # Cloudflare Pages header rules: cross-origin isolation lets the editor use
     # typst-wasm's worker backend (SharedArrayBuffer). Without it, it falls
-    # back to JSPI, which only recent Chromium-based browsers have.
+    # back to JSPI, which only recent Chromium-based browsers have. Set on the
+    # whole site: the editor docks into every page and previews pages in an
+    # iframe, and all of them must be isolated. require-corp (not
+    # credentialless) because Safari supports only that; everything the site
+    # loads is same-origin or CORS (GitHub API, package registry).
     (DIST / "_headers").write_text(
-        "/edit/*\n"
+        "/*\n"
         "  Cross-Origin-Opener-Policy: same-origin\n"
-        "  Cross-Origin-Embedder-Policy: credentialless\n"
+        "  Cross-Origin-Embedder-Policy: require-corp\n"
     )
     with tempfile.TemporaryDirectory() as tmp:
         t = Path(tmp)

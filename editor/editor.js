@@ -44,9 +44,26 @@ const ui = {
 // path -> { sha, text?, bytes?, loaded, saved (text as on GitHub) }
 const files = new Map();
 let compiled = false; // has the preview shown a compile yet?
+let ready = false;    // compiler started and every loaded source handed to it
 let current = null, compiler = null, view = null, compileTimer = 0, compileSeq = 0;
 
 function setStatus(text, kind = "") { ui.status.textContent = text; ui.status.className = "status " + kind; }
+
+// Startup steps: shown in the status line, timed in the console, and flagged
+// when one takes unusually long, so a stall says where it is.
+let stage = "", stageT0 = 0, stageNote = "";
+function step(label, note = "") {
+  const now = performance.now();
+  if (stage) console.info(`[edit] ${stage}: ${Math.round(now - stageT0)} ms`);
+  stage = label; stageT0 = now; stageNote = note;
+  if (label) setStatus(label + (note ? " " + note : "") + "…", "busy");
+}
+setInterval(() => {
+  if (!stage) return;
+  const s = Math.round((performance.now() - stageT0) / 1000);
+  if (s >= 15) setStatus(`${stage}${stageNote ? " " + stageNote : ""}… still waiting after ${s} s (details in the browser console)`, "busy");
+}, 1000);
+const backendName = () => (typeof SharedArrayBuffer !== "undefined" && self.crossOriginIsolated) ? "worker" : (typeof WebAssembly.Suspending === "function" ? "JSPI" : "none");
 
 // ---- GitHub ------------------------------------------------------------------
 async function gh(path, opts = {}) {
@@ -141,14 +158,23 @@ async function fetchWrapped(url, init) {
   return r;
 }
 
-async function loadWasm(url) {
-  const r = await fetchWrapped(url);
+async function loadWasm(url, onBytes) {
+  let r = await fetchWrapped(url);
   if (!r.ok) throw new Error(`can't load ${url}: ${r.status}`);
+  if (onBytes && r.body) {
+    let n = 0;
+    const counted = r.body.pipeThrough(new TransformStream({ transform(chunk, c) { n += chunk.byteLength; onBytes(n); c.enqueue(chunk); } }));
+    r = new Response(counted, { headers: { "content-type": r.headers.get("content-type") || "" } });
+  }
   if (/wasm/.test(r.headers.get("content-type") || "")) return WebAssembly.compileStreaming(r);
   return WebAssembly.compile(await r.arrayBuffer());
 }
 async function startCompiler() {
-  const core = name => loadWasm(new URL(`typst-wasm/engine/${name}`, VENDOR).href);
+  step("Downloading the Typst compiler");
+  console.info(`[edit] backend: ${backendName()}, cross-origin isolated: ${self.crossOriginIsolated}`);
+  const progress = n => { if (stage.startsWith("Downloading")) { stageNote = `(${(n / 1e6).toFixed(1)} MB)`; if (performance.now() - stageT0 < 15000) setStatus(`${stage} ${stageNote}…`, "busy"); } };
+  const core = name => loadWasm(new URL(`typst-wasm/engine/${name}`, VENDOR).href, name === "engine.core.wasm" ? progress : null)
+    .then(m => { if (name === "engine.core.wasm") step("Starting the Typst compiler", `(${backendName()})`); return m; });
   const ourPackages = new URL("packages", VENDOR).href;
   compiler = await createTypstCompiler({
     // Worker backend when the page is cross-origin isolated (see _headers), JSPI otherwise.
@@ -165,9 +191,11 @@ async function startCompiler() {
       return fetch(String(url).replace(ourPackages, OFFICIAL_PACKAGES), init);
     },
   });
+  step("Loading fonts");
   const fonts = ["NewCM10-Regular.otf", "NewCM10-Italic.otf", "NewCM10-Bold.otf", "NewCM10-BoldItalic.otf", "NewCMMath-Regular.otf", "DejaVuSansMono.ttf"];
   await compiler.addFonts(...fonts.map(f => fetch(new URL("fonts/" + f, VENDOR)).then(r => r.arrayBuffer()).then(b => new Uint8Array(b))));
   for (const path of files.keys()) if (files.get(path).loaded) await pushToCompiler(path);
+  step("");
 }
 
 async function pushToCompiler(path) {
@@ -179,25 +207,29 @@ async function pushToCompiler(path) {
 function scheduleCompile(delay = 250) { clearTimeout(compileTimer); compileTimer = setTimeout(compile, delay); }
 
 async function compile() {
-  if (!compiler || !current) return;
+  if (!ready || !current) return;
   const seq = ++compileSeq, t0 = performance.now();
+  if (!compiled) step("Compiling the page");
   await compiler.addSource(current, view.state.doc.toString());
   let result;
   try {
     result = await compiler.compile({ format: "html", main: current, inputs: { preview: "true" } });
   } catch (e) {
-    if (seq === compileSeq) showDiagnostics(e.diagnostics || [{ severity: "error", message: e.message }]);
+    if (!compiled) step("");
+    if (seq === compileSeq) { showDiagnostics(e.diagnostics || [{ severity: "error", message: e.message }]); setStatus("The page has errors (see below)", "error"); }
     return;
   }
   if (seq !== compileSeq) return;
   showDiagnostics(result.diagnostics);
+  if (!compiled) step("");
   showPreview(fixMathML(result.output)); compiled = true;
   if (!isDirty()) setStatus(`Compiled in ${Math.round(performance.now() - t0)} ms`);
 }
 
 function showPreview(html) {
   if (EMBED) { toHost({ type: "preview", html }); return; }
-  const win = ui.preview.contentWindow, y = win ? win.scrollY : 0;
+  let y = 0;
+  try { y = ui.preview.contentWindow.scrollY; } catch {} // a page the browser won't let us read
   ui.preview.onload = () => { try { ui.preview.contentWindow.scrollTo(0, y); } catch {} };
   // Site-absolute paths (/assets/style.css, /blog/…) resolve from the site root,
   // which is the editor's parent directory, wherever the site is served from.
@@ -415,8 +447,14 @@ window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault()
 
 (async () => {
   view = new EditorView({ parent: $("editor"), state: EditorState.create({ doc: "", extensions: [basicSetup, editorTheme] }) });
+  // Download and start the compiler while the sources load.
+  const compilerReady = startCompiler().then(() => true, e => {
+    step(""); console.error("[edit] compiler failed to start", e);
+    setStatus("Typst compiler failed to start: " + e.message + (backendName() === "none" ? " (this browser lacks the features it needs; try a recent Chrome, Edge or Firefox)" : ""), "error");
+    return false;
+  });
   try {
-    setStatus("Reading the repository…", "busy");
+    if (!stage) setStatus("Reading the repository…", "busy");
     await loadTree();
   } catch (e) {
     files.clear();
@@ -433,8 +471,9 @@ window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault()
   const wanted = hashPath();
   const first = files.has(wanted) ? wanted : ui.file.options[0] && ui.file.options[0].value;
   if (first) await open(first);
-  setStatus("Starting the Typst compiler (first visit downloads about 10 MB)…", "busy");
-  try { await startCompiler(); } catch (e) { setStatus("Typst compiler failed to start: " + e.message, "error"); return; }
+  if (!(await compilerReady)) return;
+  for (const path of files.keys()) if (files.get(path).loaded) await pushToCompiler(path);
+  ready = true;
   scheduleCompile(0);
   if (snapshot) setTimeout(() => { if (!ui.status.classList.contains("error")) setStatus(`Offline copy from ${snapshot.built} · edits preview live but can't be saved`); }, 1500);
 })();

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Serve dist/ locally with the same isolation headers Cloudflare sends for /edit/.
+"""Serve dist/ locally with the same isolation headers Cloudflare sends (dist/_headers).
 
     python3 scripts/serve.py [port]
 """
@@ -13,9 +13,8 @@ DIST = Path(__file__).resolve().parent.parent / "dist"
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
-        if self.path.startswith("/edit/"):
-            self.send_header("Cross-Origin-Opener-Policy", "same-origin")
-            self.send_header("Cross-Origin-Embedder-Policy", "credentialless")
+        self.send_header("Cross-Origin-Opener-Policy", "same-origin")
+        self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
         super().end_headers()
 
 

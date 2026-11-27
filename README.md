@@ -88,8 +88,10 @@ They are distributed under the GUST Font License.
 - In the preview, garden links point to `#` and backlinks/indexes are not
   built (only the open file is compiled).
 
-Locally: `python3 scripts/build.py --editor && python3 scripts/serve.py`,
+Locally: `python3 scripts/build.py --editor && python3 scripts/serve.py`
+(with Nix, `nix develop` first gives Typst, Python and Node),
 then open http://localhost:8000/edit/. `serve.py` sends the
-cross-origin-isolation headers (also set for Cloudflare in `dist/_headers`)
-that let the compiler run in a worker; without them it needs a browser with
-JSPI (recent Chrome/Edge).
+cross-origin-isolation headers (also set for the whole site on Cloudflare in
+`dist/_headers`) that let the compiler run in a worker; without them it needs
+a browser with JSPI (recent Chrome/Edge). The editor's status line names each
+startup step, and the browser console logs `[edit]` timings for each.
