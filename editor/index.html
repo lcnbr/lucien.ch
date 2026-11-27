@@ -17,26 +17,41 @@
   </script>
 </head>
 <body>
-  <header class="bar">
-    <a class="home" href="../">Lucien</a>
-    <select id="file" aria-label="File"></select>
-    <button id="new" type="button">New…</button>
-    <span id="status" class="status" role="status">Loading…</span>
-    <span class="spacer"></span>
-    <a id="view" class="view" href="/" target="_blank" rel="noopener">View page</a>
-    <button id="save" type="button" class="primary" disabled>Save</button>
-    <button id="settings" type="button" aria-label="Settings">⚙</button>
-  </header>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+  </svg>
 
-  <main class="panes">
-    <section class="pane source">
-      <div id="editor"></div>
-      <ol id="diagnostics" class="diagnostics" aria-label="Compiler messages"></ol>
-    </section>
-    <section class="pane preview">
-      <iframe id="preview" title="Preview"></iframe>
-    </section>
+  <main class="stage">
+    <iframe id="preview" title="Page preview"></iframe>
   </main>
+
+  <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Resize editor" tabindex="0"></div>
+
+  <aside class="panel" id="panel" aria-label="Editor">
+    <header class="panel-bar">
+      <label class="file-pick">
+        <span class="sr">File</span>
+        <select id="file"></select>
+      </label>
+      <button id="new" type="button" class="icon" title="New page"><svg><use href="#i-plus"/></svg></button>
+      <span class="spacer"></span>
+      <button id="settings" type="button" class="icon" title="GitHub access"><svg><use href="#i-gear"/></svg></button>
+      <button id="save" type="button" class="primary" disabled title="Save (Ctrl/⌘ S)">Save</button>
+      <button id="close" type="button" class="icon" title="Close editor (Esc)"><svg><use href="#i-close"/></svg></button>
+    </header>
+    <div id="editor"></div>
+    <ol id="diagnostics" class="diagnostics" aria-label="Compiler messages"></ol>
+    <footer class="panel-foot">
+      <span id="status" class="status" role="status">Loading…</span>
+      <a id="view" class="view" href="../" target="_blank" rel="noopener">Open page <svg><use href="#i-out"/></svg></a>
+    </footer>
+  </aside>
+
+  <button id="reopen" type="button" class="reopen" title="Open editor"><svg><use href="#i-pen"/></svg><span>Edit</span></button>
 
   <dialog id="settings-dialog">
     <form method="dialog">

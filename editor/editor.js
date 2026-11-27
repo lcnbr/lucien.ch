@@ -4,7 +4,10 @@
 // in the browser with typst-wasm (same Typst version and templates as the real
 // build), shows it beside the source, and commits changes back to GitHub with
 // a fine-grained token kept in this browser.
-import { EditorView, EditorState, basicSetup, keymap, indentWithTab, typst } from "./vendor/codemirror.js";
+import {
+  EditorView, EditorState, basicSetup, keymap, indentWithTab, typst, typstTags,
+  HighlightStyle, syntaxHighlighting, tags as t, setDiagnostics, lintGutter,
+} from "./vendor/codemirror.js";
 import { createTypstCompiler } from "typst-wasm";
 import { createWebWorker } from "typst-wasm/worker/browser";
 import { fixMathML } from "./mathml-fix.js";
@@ -33,6 +36,7 @@ const ui = {
 
 // path -> { sha, text?, bytes?, loaded, saved (text as on GitHub) }
 const files = new Map();
+let compiled = false; // has the preview shown a compile yet?
 let current = null, compiler = null, view = null, compileTimer = 0, compileSeq = 0;
 
 function setStatus(text, kind = "") { ui.status.textContent = text; ui.status.className = "status " + kind; }
@@ -180,7 +184,7 @@ async function compile() {
   }
   if (seq !== compileSeq) return;
   showDiagnostics(result.diagnostics);
-  showPreview(fixMathML(result.output));
+  showPreview(fixMathML(result.output)); compiled = true;
   if (!isDirty()) setStatus(`Compiled in ${Math.round(performance.now() - t0)} ms`);
 }
 
@@ -196,6 +200,17 @@ function showPreview(html) {
 
 function showDiagnostics(list) {
   list = list.filter(d => !/html export is under active development/.test(d.message));
+  if (view && current) {
+    const doc = view.state.doc, marks = [];
+    for (const d of list) {
+      if (d.file !== current || !d.line || d.line > doc.lines) continue;
+      const line = doc.line(d.line), from = Math.min(line.from + Math.max((d.column || 1) - 1, 0), line.to);
+      const word = /^[\p{L}\p{N}_.-]+/u.exec(doc.sliceString(from, line.to));
+      marks.push({ from, to: Math.max(from + (word ? word[0].length : 1), from), severity: d.severity === "warning" ? "warning" : "error",
+        message: d.message + (d.hints && d.hints.length ? "\nhint: " + d.hints.join("\nhint: ") : "") });
+    }
+    view.dispatch(setDiagnostics(view.state, marks.map(m => ({ ...m, to: Math.min(m.to, doc.length) }))));
+  }
   ui.diagnostics.replaceChildren(...list.map(d => {
     const li = document.createElement("li");
     li.className = d.severity;
@@ -213,6 +228,50 @@ function showDiagnostics(list) {
 }
 
 // ---- editor ------------------------------------------------------------------
+const editorTheme = EditorView.theme({
+  "&": { height: "100%", fontSize: "13.5px", backgroundColor: "var(--panel)", color: "var(--fg)" },
+  ".cm-scroller": { fontFamily: "var(--mono)", lineHeight: "1.7" },
+  ".cm-content": { padding: "14px 0 40vh", caretColor: "var(--accent)" },
+  ".cm-line": { padding: "0 20px 0 8px" },
+  ".cm-gutters": { backgroundColor: "var(--panel)", color: "var(--ed-gutter)", border: "none", paddingLeft: "6px" },
+  ".cm-lineNumbers .cm-gutterElement": { minWidth: "28px", fontVariantNumeric: "tabular-nums" },
+  ".cm-activeLine": { backgroundColor: "var(--ed-active)" },
+  ".cm-activeLineGutter": { backgroundColor: "transparent", color: "var(--fg)" },
+  "&.cm-focused": { outline: "none" },
+  ".cm-cursor, .cm-dropCursor": { borderLeft: "2px solid var(--accent)" },
+  "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection": { backgroundColor: "var(--ed-sel) !important" },
+  ".cm-matchingBracket": { backgroundColor: "var(--ed-sel)", outline: "none" },
+  ".cm-foldPlaceholder": { backgroundColor: "var(--ed-active)", border: "none", color: "var(--muted)", padding: "0 6px", borderRadius: "4px" },
+  ".cm-tooltip": { backgroundColor: "var(--panel)", color: "var(--fg)", border: "1px solid var(--rule)", borderRadius: "8px", boxShadow: "0 10px 30px rgb(0 0 0 / 0.15)", overflow: "hidden" },
+  ".cm-tooltip.cm-tooltip-autocomplete > ul": { fontFamily: "var(--mono)", maxHeight: "16em" },
+  ".cm-tooltip.cm-tooltip-autocomplete > ul > li": { padding: "3px 10px" },
+  ".cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]": { backgroundColor: "var(--accent)", color: "var(--accent-fg)" },
+  ".cm-completionDetail": { color: "var(--muted)", fontStyle: "normal", marginLeft: "1em" },
+  ".cm-panels": { backgroundColor: "var(--bar)", color: "var(--fg)" },
+  ".cm-panels.cm-panels-bottom": { borderTop: "1px solid var(--rule)" },
+  ".cm-searchMatch": { backgroundColor: "rgb(255 200 0 / 0.25)" },
+  ".cm-diagnostic": { fontFamily: "system-ui, sans-serif", padding: "6px 10px", whiteSpace: "pre-wrap" },
+  ".cm-lintRange-error": { backgroundImage: "none", textDecoration: "underline wavy var(--error)", textUnderlineOffset: "3px" },
+  ".cm-lintRange-warning": { backgroundImage: "none", textDecoration: "underline wavy var(--warning)", textUnderlineOffset: "3px" },
+});
+const typstColours = syntaxHighlighting(HighlightStyle.define([
+  { tag: t.comment, color: "var(--hl-comment)", fontStyle: "italic" },
+  { tag: [t.keyword, t.bool, t.null, t.atom], color: "var(--hl-keyword)" },
+  { tag: t.function(t.variableName), color: "var(--hl-func)" },
+  { tag: t.string, color: "var(--hl-string)" },
+  { tag: t.number, color: "var(--hl-number)" },
+  { tag: [typstTags.mathDelimiter, t.escape, t.labelName], color: "var(--hl-math)" },
+  { tag: [typstTags.interpolated, t.propertyName], color: "var(--hl-interp)" },
+  { tag: typstTags.listMarker, color: "var(--hl-keyword)", fontWeight: "600" },
+  { tag: [t.operator, t.punctuation, t.paren], color: "var(--hl-op)" },
+  { tag: t.heading, fontWeight: "700", color: "var(--fg)" },
+  { tag: t.strong, fontWeight: "700" },
+  { tag: t.emphasis, fontStyle: "italic" },
+  { tag: t.link, color: "var(--accent)", textDecoration: "underline" },
+  { tag: t.monospace, color: "var(--muted)" },
+  { tag: t.invalid, color: "var(--error)" },
+]));
+
 const isDirty = () => current && view && view.state.doc.toString() !== files.get(current).saved;
 function refreshDirty() {
   const dirty = isDirty();
@@ -240,13 +299,14 @@ function urlFor(path) {
 
 async function open(path) {
   if (!files.has(path)) return;
-  setStatus("Opening…");
+  setStatus("Opening…", "busy");
   const f = await loadFile(path);
   current = path;
   const draft = store.getDraft(path);
   const text = draft !== null && draft !== f.saved ? draft : f.text;
   view.setState(EditorState.create({ doc: text, extensions: extensions() }));
   ui.file.value = path; ui.view.href = siteHref(urlFor(path));
+  if (!compiled && files.get(path).sha !== null) ui.preview.src = siteHref(urlFor(path));
   if (location.hash.slice(1) !== path) history.replaceState(null, "", "#" + path);
   refreshDirty();
   if (draft !== null && draft !== f.saved) setStatus("Restored unsaved changes from this browser", "dirty");
@@ -255,7 +315,7 @@ async function open(path) {
 
 function extensions() {
   return [
-    basicSetup, typst(), keymap.of([indentWithTab, { key: "Mod-s", preventDefault: true, run: () => { save(); return true; } }]),
+    basicSetup, typst(), editorTheme, typstColours, lintGutter(), keymap.of([indentWithTab, { key: "Mod-s", preventDefault: true, run: () => { save(); return true; } }]),
     EditorView.lineWrapping,
     EditorView.updateListener.of(u => {
       if (!u.docChanged) return;
@@ -307,6 +367,36 @@ $("new-dialog").addEventListener("close", async () => {
   view.dispatch({ selection: { anchor: view.state.doc.length } }); view.focus();
 });
 
+// ---- panel -------------------------------------------------------------------
+const PANEL_KEY = "edit.panelWidth";
+function setPanel(open) {
+  document.body.classList.toggle("closed", !open);
+  if (open && view) requestAnimationFrame(() => view.focus());
+}
+$("close").addEventListener("click", () => setPanel(false));
+$("reopen").addEventListener("click", () => setPanel(true));
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && !document.querySelector("dialog[open]") && !document.querySelector(".cm-tooltip-autocomplete, .cm-search")) setPanel(false);
+  if ((e.key === "e" || e.key === "E") && (e.metaKey || e.ctrlKey) && e.shiftKey) { e.preventDefault(); setPanel(document.body.classList.contains("closed")); }
+});
+try { const w = localStorage.getItem(PANEL_KEY); if (w) document.documentElement.style.setProperty("--panel-w", w); } catch {}
+{
+  const handle = $("resizer");
+  const widthAt = x => Math.round(Math.min(Math.max(window.innerWidth - x, 340), window.innerWidth - 240)) + "px";
+  const apply = w => { document.documentElement.style.setProperty("--panel-w", w); try { localStorage.setItem(PANEL_KEY, w); } catch {} };
+  handle.addEventListener("pointerdown", e => {
+    handle.setPointerCapture(e.pointerId); document.body.classList.add("resizing");
+    const move = ev => apply(widthAt(ev.clientX));
+    const up = () => { document.body.classList.remove("resizing"); handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up); };
+    handle.addEventListener("pointermove", move); handle.addEventListener("pointerup", up);
+  });
+  handle.addEventListener("keydown", e => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    const w = $("panel").getBoundingClientRect().width + (e.key === "ArrowLeft" ? 40 : -40);
+    apply(widthAt(window.innerWidth - w)); e.preventDefault();
+  });
+}
+
 // ---- start -------------------------------------------------------------------
 $("settings").addEventListener("click", openSettings);
 ui.save.addEventListener("click", save);
@@ -315,9 +405,9 @@ window.addEventListener("hashchange", () => { const p = decodeURIComponent(locat
 window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault(); });
 
 (async () => {
-  view = new EditorView({ parent: $("editor"), state: EditorState.create({ doc: "", extensions: [basicSetup] }) });
+  view = new EditorView({ parent: $("editor"), state: EditorState.create({ doc: "", extensions: [basicSetup, editorTheme] }) });
   try {
-    setStatus("Reading the repository…");
+    setStatus("Reading the repository…", "busy");
     await loadTree();
   } catch (e) {
     files.clear();
@@ -334,7 +424,7 @@ window.addEventListener("beforeunload", e => { if (isDirty()) e.preventDefault()
   const wanted = decodeURIComponent(location.hash.slice(1));
   const first = files.has(wanted) ? wanted : ui.file.options[0] && ui.file.options[0].value;
   if (first) await open(first);
-  setStatus("Starting the Typst compiler (first visit downloads about 10 MB)…");
+  setStatus("Starting the Typst compiler (first visit downloads about 10 MB)…", "busy");
   try { await startCompiler(); } catch (e) { setStatus("Typst compiler failed to start: " + e.message, "error"); return; }
   scheduleCompile(0);
   if (snapshot) setTimeout(() => { if (!ui.status.classList.contains("error")) setStatus(`Offline copy from ${snapshot.built} · edits preview live but can't be saved`); }, 1500);

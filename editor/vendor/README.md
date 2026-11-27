@@ -4,8 +4,8 @@
 `codemirror-entry.js`:
 
 ```sh
-npm i codemirror@6.0.2 @codemirror/view @codemirror/state @codemirror/commands \
-  @codemirror/language codemirror-lang-typst@0.6.0 esbuild
+npm i codemirror@6.0.2 @codemirror/view @codemirror/state @codemirror/commands @codemirror/lint \
+  @codemirror/language @lezer/highlight codemirror-lang-typst@0.6.0 esbuild
 npx esbuild codemirror-entry.js --bundle --format=esm --minify --outfile=codemirror.js
 ```
 
