@@ -15,9 +15,11 @@ which emits inline SVG in HTML and leaves the PDF untouched.
 
 == A commutative diagram
 
-#figure(diagram-frame(diagram(cell-size: 15mm, $
-  G edge(f, ->) edge("d", pi, ->>) & im(f) \
-  G slash ker(f) edge("ur", tilde(f), "hook-->")
+// fletcher 0.6: edges inside a math-mode diagram need `in-math: true`.
+#let hom = edge.with(in-math: true)
+#figure(diagram-frame(diagram(spacing: 4em, $
+  G hom(f, ->) hom("d", pi, ->>) & im(f) \
+  G slash ker(f) hom("ur", tilde(f), "hook-->")
 $)), caption: [First isomorphism theorem.])
 
 == A Feynman diagram
@@ -28,7 +30,7 @@ $)), caption: [First isomorphism theorem.])
   node((4, 0), $mu^-$), node((4, 2), $mu^+$),
   edge((0, 0), (1, 1), "-|>-"),
   edge((1, 1), (0, 2), "-|>-"),
-  edge((1, 1), (3, 1), "~", label: $gamma$),
+  edge((1, 1), (3, 1), "~", $gamma$),
   edge((4, 0), (3, 1), "-<|-"),
   edge((3, 1), (4, 2), "-<|-"),
 )), caption: [$e^+ e^- -> mu^+ mu^-$ at tree level.])
