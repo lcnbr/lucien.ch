@@ -140,7 +140,10 @@ They are distributed under the GUST Font License.
 Locally: `python3 scripts/build.py --editor && python3 scripts/serve.py`
 (with Nix, `nix develop` first gives Typst, Python and Node),
 then open http://localhost:8000/edit/. `serve.py` sends the
-cross-origin-isolation headers (also set for the whole site on Cloudflare in
-`dist/_headers`) that let the compiler run in a worker; without them it needs
+cross-origin-isolation headers that let the compiler run in a worker. On
+Cloudflare, `/edit/` always gets them (`dist/_headers`); other pages get them
+only while the editor is docked (an `edit=1` cookie read by
+`functions/_middleware.js`), because isolation would also block the giscus
+comments for readers; without them it needs
 a browser with JSPI (recent Chrome/Edge). The editor's status line names each
 startup step, and the browser console logs `[edit]` timings for each.

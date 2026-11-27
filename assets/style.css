@@ -218,3 +218,6 @@ html.editing .edit-tab { opacity: 0; pointer-events: none; }
 .comments { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
 .comments h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-top: 0; }
 @media (prefers-color-scheme: dark) { .draft-badge, .draft-banner { color: #f0a060; } }
+/* giscus styles its own frame, but set the basics too so it never shows the
+   browser's default bordered 300×150 box while loading. */
+.comments iframe { display: block; width: 100%; min-height: 150px; border: 0; background: transparent; color-scheme: normal; }

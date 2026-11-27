@@ -254,6 +254,13 @@ def write_drafts_gate() -> None:
           "LOCKED (DRAFTS_ACCESS_TEAM not set)"))
 
 
+def write_cors_headers() -> None:
+    """Let giscus' iframe (giscus.app) load the comments theme and its fonts."""
+    with open(DIST / "_headers", "a") as f:
+        for path in ("/assets/giscus.css", "/assets/fonts/*"):
+            f.write(f"{path}\n  Access-Control-Allow-Origin: *\n")
+
+
 def build_editor() -> None:
     """Copy editor/ to dist/edit/ and vendor the compiler, fonts and packages."""
     out = DIST / "edit"
@@ -261,16 +268,23 @@ def build_editor() -> None:
     vendor = out / "vendor"
     # Cloudflare Pages header rules: cross-origin isolation lets the editor use
     # typst-wasm's worker backend (SharedArrayBuffer). Without it, it falls
-    # back to JSPI, which only recent Chromium-based browsers have. Set on the
-    # whole site: the editor docks into every page and previews pages in an
-    # iframe, and all of them must be isolated. require-corp (not
-    # credentialless) because Safari supports only that; everything the site
-    # loads is same-origin or CORS (GitHub API, package registry).
+    # back to JSPI, which only recent Chromium-based browsers have.
+    # require-corp (not credentialless) because Safari supports only that.
+    # Only /edit/ is always isolated: isolation would also block the giscus
+    # comments iframe for every reader. Pages get isolated only while the
+    # editor is docked on them (edit=1 cookie, see functions/_middleware.js).
     (DIST / "_headers").write_text(
-        "/*\n"
+        "/edit/*\n"
         "  Cross-Origin-Opener-Policy: same-origin\n"
         "  Cross-Origin-Embedder-Policy: require-corp\n"
     )
+    # Run that function on pages only, not on static files. Not on the drafts
+    # site, whose _worker.js must see every request (it is the Access check).
+    if not DRAFTS:
+        (DIST / "_routes.json").write_text(json.dumps({
+            "version": 1, "include": ["/*"],
+            "exclude": ["/assets/*", "/edit/*", "/pagefind/*", "/feed.xml"],
+        }) + "\n")
     with tempfile.TemporaryDirectory() as tmp:
         t = Path(tmp)
         tw = npm_unpack(f"typst-wasm@{EDITOR_NPM['typst-wasm']}", t)
@@ -381,6 +395,9 @@ def main() -> None:
 
     if args.editor and not args.watch:
         build_editor()
+
+    if not args.watch:
+        write_cors_headers()
 
     if DRAFTS and not args.watch:
         write_drafts_gate()

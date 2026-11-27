@@ -16,8 +16,22 @@
   tab.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg><span>Edit</span>';
   document.body.append(tab);
 
+  // The editor compiles in a worker only on a cross-origin isolated page.
+  // Pages are served isolated only while the edit=1 cookie is set
+  // (functions/_middleware.js), since isolation blocks the comments iframe
+  // for readers. So the first Edit sets it and reloads, and the dock opens
+  // after the reload; closing the editor clears it again.
+  const REOPEN = "edit.reopen";
+  const setCookie = on => { document.cookie = "edit=" + (on ? "1; max-age=86400" : "; max-age=0") + "; path=/; SameSite=Lax"; };
+
   function open() {
     if (dock) return;
+    if (!self.crossOriginIsolated && !/(?:^|;\s*)edit=1/.test(document.cookie)) {
+      setCookie(true);
+      try { sessionStorage.setItem(REOPEN, "1"); } catch {}
+      location.reload();
+      return;
+    }
     published = main.innerHTML;
     try { const w = localStorage.getItem(W_KEY); if (w) root.style.setProperty("--edit-w", w); } catch {}
     dock = document.createElement("div");
@@ -39,6 +53,7 @@
 
   function close() {
     if (!dock) return;
+    setCookie(false);
     root.classList.remove("editing");
     const d = dock; dock = null; frame = null;
     if (published !== null) { main.innerHTML = published; published = null; }
@@ -71,6 +86,9 @@
       if (next) main.innerHTML = next.innerHTML;
     }
   });
+
+  // Reopen the dock after the reload that made this page isolated.
+  try { if (sessionStorage.getItem(REOPEN)) { sessionStorage.removeItem(REOPEN); open(); } } catch {}
 
   const wants = e => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
   link.addEventListener("click", e => { if (wants(e)) { e.preventDefault(); open(); } });
