@@ -52,6 +52,10 @@ jobs:
           retention-days: 7
 
       # Deploys only once the Cloudflare secrets exist in the repo settings.
+      # Creates the Pages project on the first run; later runs find it exists.
+      - name: Create Cloudflare Pages project
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: npx --yes wrangler@4 pages project create lucien-ch --production-branch main || echo "Project already exists (or see the deploy step for errors)."
       - name: Deploy to Cloudflare Pages
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         run: >
