@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Edit · Lucien</title>
+  <link rel="stylesheet" href="editor.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "typst-wasm": "./vendor/typst-wasm/index.js",
+        "typst-wasm/worker/browser": "./vendor/typst-wasm/worker/browser.js",
+        "nanotar": "./vendor/nanotar/index.mjs"
+      }
+    }
+  </script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+  </svg>
+
+  <main class="stage">
+    <iframe id="preview" title="Page preview"></iframe>
+  </main>
+
+  <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Resize editor" tabindex="0"></div>
+
+  <aside class="panel" id="panel" aria-label="Editor">
+    <header class="panel-bar">
+      <label class="file-pick">
+        <span class="sr">File</span>
+        <select id="file"></select>
+      </label>
+      <button id="new" type="button" class="icon" title="New page"><svg><use href="#i-plus"/></svg></button>
+      <span class="spacer"></span>
+      <button id="settings" type="button" class="icon" title="GitHub access"><svg><use href="#i-gear"/></svg></button>
+      <button id="save" type="button" class="primary" disabled title="Save (Ctrl/⌘ S)">Save</button>
+      <button id="close" type="button" class="icon" title="Close editor (Esc)"><svg><use href="#i-close"/></svg></button>
+    </header>
+    <div id="editor"></div>
+    <ol id="diagnostics" class="diagnostics" aria-label="Compiler messages"></ol>
+    <footer class="panel-foot">
+      <span id="status" class="status" role="status">Loading…</span>
+      <a id="view" class="view" href="../" target="_blank" rel="noopener">Open page <svg><use href="#i-out"/></svg></a>
+    </footer>
+  </aside>
+
+  <button id="reopen" type="button" class="reopen" title="Open editor"><svg><use href="#i-pen"/></svg><span>Edit</span></button>
+
+  <dialog id="settings-dialog">
+    <form method="dialog">
+      <h2>GitHub access</h2>
+      <p>Saving commits straight to <code id="repo-name"></code>. Create a
+        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a>
+        for this repository only, with <b>Contents: read and write</b>. It is kept in this browser's local storage and sent only to api.github.com.</p>
+      <label>Token <input id="token" type="password" autocomplete="off" spellcheck="false"></label>
+      <label>Branch <input id="branch" type="text" spellcheck="false"></label>
+      <menu>
+        <button value="forget" type="submit" class="quiet">Forget token</button>
+        <button value="cancel" type="submit">Cancel</button>
+        <button value="ok" type="submit" class="primary">Save settings</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="new-dialog">
+    <form method="dialog">
+      <h2>New page</h2>
+      <label>Kind
+        <select id="new-kind">
+          <option value="note">Garden note</option>
+          <option value="post">Blog post</option>
+          <option value="page">Page</option>
+        </select>
+      </label>
+      <label>Title <input id="new-title" type="text" required></label>
+      <label>Slug <input id="new-slug" type="text" pattern="[a-z0-9][a-z0-9-]*" required spellcheck="false"></label>
+      <menu>
+        <button value="cancel" type="submit" formnovalidate>Cancel</button>
+        <button value="ok" type="submit" class="primary">Create</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script type="module" src="editor.js"></script>
+</body>
+</html>

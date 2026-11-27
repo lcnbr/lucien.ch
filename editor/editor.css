@@ -1,0 +1,130 @@
+/* Editor: the page on the left, a CodeMirror panel that slides in from the right. */
+:root {
+  --fg: #1c1c1f; --muted: #6d6d75; --bg: #fdfcf9; --panel: #ffffff; --bar: #f7f6f3; --rule: #e6e3dc;
+  --accent: #2f5fd0; --accent-fg: #fff; --ok: #1f8a4c; --error: #c4321f; --warning: #a86a00;
+  --ed-active: #f3f5fb; --ed-sel: #d7e2fb; --ed-gutter: #b5b5bc;
+  --hl-keyword: #b4237a; --hl-func: #2f5fd0; --hl-string: #1f7a3f; --hl-number: #b35c00;
+  --hl-comment: #8d8d96; --hl-math: #0f7b6c; --hl-interp: #7a3fb8; --hl-op: #6d6d75;
+  --shadow: -18px 0 40px rgb(20 20 30 / 0.10);
+  --panel-w: min(46vw, 760px);
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e7e6e3; --muted: #9b9aa2; --bg: #16161a; --panel: #1b1c21; --bar: #202128; --rule: #2d2e36;
+    --accent: #7aa2ff; --accent-fg: #0f1220; --ok: #5fcf8a; --error: #ff8a7a; --warning: #f2c14e;
+    --ed-active: #23252d; --ed-sel: #2f3b5c; --ed-gutter: #565864;
+    --hl-keyword: #ff7ab2; --hl-func: #7aa2ff; --hl-string: #93d49a; --hl-number: #f5a35c;
+    --hl-comment: #6f717c; --hl-math: #5fd4c4; --hl-interp: #c79bff; --hl-op: #9b9aa2;
+    --shadow: -18px 0 40px rgb(0 0 0 / 0.45);
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  display: grid; grid-template-columns: minmax(0, 1fr) 0 var(--panel-w); grid-template-rows: 100%;
+  background: var(--bg); color: var(--fg); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden;
+}
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the page */
+.stage { min-width: 0; min-height: 0; }
+.stage iframe { width: 100%; height: 100%; border: 0; display: block; background: #fdfcf9; }
+
+/* drag handle, drawn over the panel's left edge */
+.resizer { position: relative; z-index: 3; cursor: col-resize; touch-action: none; }
+.resizer::before { content: ""; position: absolute; inset: 0 -5px; }
+.resizer:hover::after, .resizer:focus-visible::after, body.resizing .resizer::after {
+  content: ""; position: absolute; inset: 0 -1px; background: var(--accent);
+}
+body.resizing { cursor: col-resize; user-select: none; }
+body.resizing iframe { pointer-events: none; }
+
+/* the panel */
+.panel {
+  min-width: 0; min-height: 0; display: flex; flex-direction: column; position: relative; z-index: 2;
+  background: var(--panel); border-left: 1px solid var(--rule); box-shadow: var(--shadow);
+  animation: slide-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes slide-in { from { transform: translateX(100%); } }
+body.closed { grid-template-columns: minmax(0, 1fr) 0 0; }
+body.closed .panel, body.closed .resizer { display: none; }
+
+.panel-bar { display: flex; align-items: center; gap: 6px; padding: 8px 10px 8px 12px; border-bottom: 1px solid var(--rule); background: var(--bar); }
+.panel-bar .spacer { flex: 1; }
+.file-pick { position: relative; min-width: 0; flex: 0 1 auto; }
+.file-pick select {
+  appearance: none; max-width: 100%; padding: 6px 30px 6px 10px; border: 1px solid var(--rule); border-radius: 8px;
+  background: var(--panel); font: 13px/1.3 var(--mono); text-overflow: ellipsis;
+}
+.file-pick::after { content: ""; position: absolute; right: 11px; top: 50%; width: 6px; height: 6px; margin-top: -5px; border: solid var(--muted); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); pointer-events: none; }
+
+button, select, input { font: inherit; color: inherit; }
+button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); cursor: pointer; transition: background 120ms, border-color 120ms; }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: 0.45; cursor: default; }
+button.icon { padding: 6px; border-color: transparent; background: transparent; color: var(--muted); }
+button.icon:hover:not(:disabled) { color: var(--fg); background: var(--ed-active); border-color: transparent; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 600; }
+button.quiet { border-color: transparent; color: var(--muted); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#editor { flex: 1; min-height: 0; overflow: hidden; }
+#editor .cm-editor { height: 100%; }
+
+.diagnostics { margin: 0; padding: 0; list-style: none; max-height: 30%; overflow: auto; border-top: 1px solid var(--rule); font-size: 13px; background: var(--bar); }
+.diagnostics:empty { display: none; }
+.diagnostics li { padding: 7px 14px; border-bottom: 1px solid var(--rule); cursor: pointer; white-space: pre-wrap; }
+.diagnostics li:hover { background: var(--ed-active); }
+.diagnostics li.error { color: var(--error); }
+.diagnostics li.warning { color: var(--warning); }
+.diagnostics .where { color: var(--muted); margin-right: 8px; font: 12px var(--mono); }
+
+.panel-foot { display: flex; align-items: center; gap: 12px; padding: 6px 14px; border-top: 1px solid var(--rule); background: var(--bar); font-size: 12px; min-height: 32px; }
+.status { flex: 1; min-width: 0; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: var(--ok); vertical-align: 1px; }
+.status.busy::before { background: var(--muted); animation: pulse 1s ease-in-out infinite; }
+.status.dirty::before { background: var(--warning); }
+.status.error { color: var(--error); }
+.status.error::before { background: var(--error); }
+@keyframes pulse { 50% { opacity: 0.3; } }
+.view { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; white-space: nowrap; }
+.view:hover { color: var(--accent); }
+.view svg { width: 13px; height: 13px; }
+
+/* floating tab to bring the panel back */
+.reopen {
+  position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 4; display: none;
+  flex-direction: column; gap: 6px; padding: 14px 9px; border-radius: 10px 0 0 10px; border-right: 0;
+  background: var(--accent); border-color: var(--accent); color: var(--accent-fg); box-shadow: var(--shadow); font-weight: 600;
+}
+.reopen span { writing-mode: vertical-rl; letter-spacing: 0.04em; }
+body.closed .reopen { display: inline-flex; }
+
+dialog { border: 1px solid var(--rule); border-radius: 14px; background: var(--panel); color: var(--fg); max-width: 34rem; width: calc(100% - 32px); padding: 22px 26px; box-shadow: 0 24px 60px rgb(0 0 0 / 0.25); }
+dialog::backdrop { background: rgb(10 10 20 / 0.35); backdrop-filter: blur(2px); }
+dialog h2 { margin: 0 0 8px; font-size: 18px; }
+dialog a { color: var(--accent); }
+dialog label { display: block; margin: 12px 0; }
+dialog input, dialog select { display: block; width: 100%; margin-top: 4px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); font-size: 16px; }
+dialog menu { display: flex; justify-content: flex-end; gap: 8px; padding: 0; margin: 18px 0 0; }
+
+@media (prefers-reduced-motion: reduce) { .panel { animation: none; } .status.busy::before { animation: none; } }
+
+/* narrow screens: the panel becomes a bottom sheet */
+@media (max-width: 760px) {
+  body { grid-template-columns: 100%; grid-template-rows: minmax(0, 1fr) 0 58%; }
+  body.closed { grid-template-columns: 100%; grid-template-rows: minmax(0, 1fr) 0 0; }
+  .resizer { display: none; }
+  .panel { border-left: 0; border-top: 1px solid var(--rule); box-shadow: 0 -12px 30px rgb(0 0 0 / 0.12); animation-name: slide-up; }
+  @keyframes slide-up { from { transform: translateY(100%); } }
+  .reopen { top: auto; bottom: 16px; right: 16px; transform: none; flex-direction: row; padding: 10px 16px; border-radius: 999px; border-right: 1px solid var(--accent); }
+  .reopen span { writing-mode: horizontal-tb; }
+}
+
+/* embedded in a page (assets/edit.js docks this in a panel on the right) */
+body.embed, body.embed.closed { display: block; }
+body.embed .stage, body.embed .resizer, body.embed .reopen { display: none; }
+body.embed .panel, body.embed.closed .panel { display: flex; height: 100%; animation: none; box-shadow: none; border: 0; }
