@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import gzip
 import json
 import re
 import os
@@ -46,6 +47,9 @@ EDITOR = ROOT / "editor"
 
 # Versions of the in-browser compiler; typst-wasm 1.0.0 embeds Typst 0.15.
 EDITOR_NPM = {"typst-wasm": "1.0.0", "@typst-wasm/fonts": "1.0.0", "nanotar": "0.2.1"}
+# Tinymist (Typst language server) for the editor; CI builds it for the
+# browser (see .github/workflows/build.yml) and passes it in TINYMIST_PKG.
+TINYMIST_VERSION = "0.15.2"
 EDITOR_FONTS = ["NewCM10-Regular.otf", "NewCM10-Italic.otf", "NewCM10-Bold.otf",
                 "NewCM10-BoldItalic.otf", "NewCMMath-Regular.otf", "DejaVuSansMono.ttf"]
 
@@ -274,6 +278,7 @@ def build_editor() -> None:
         nt = npm_unpack(f"nanotar@{EDITOR_NPM['nanotar']}", t)
         (vendor / "nanotar").mkdir(exist_ok=True)
         shutil.copy(nt / "dist/index.mjs", vendor / "nanotar/index.mjs")
+    vendor_tinymist(vendor / "tinymist")
     # Snapshot of the sources, used when GitHub's API can't be reached.
     snap = {}
     skip = set() if DRAFTS else draft_paths()
@@ -308,7 +313,31 @@ def build_editor() -> None:
             for p in sorted(version_dir.rglob("*")):
                 tar.add(p, arcname=str(p.relative_to(version_dir)), recursive=False)
         n += 1
+    (vendor / "packages" / "index.json").write_text(json.dumps(sorted(
+        p.relative_to(vendor / "packages").as_posix() for p in (vendor / "packages").rglob("*.tar.gz"))))
     print(f"editor: built dist/edit/ with {n} mirrored Typst packages")
+
+
+def vendor_tinymist(dest: Path) -> None:
+    """Add the browser build of tinymist (completion, hover, go to definition).
+
+    Optional: without it the editor works as before. TINYMIST_PKG points at a
+    wasm-pack output (crates/tinymist/pkg) or at CI's cached copy. The wasm is
+    ~36 MB, over Cloudflare Pages' 25 MiB file limit, so it ships gzipped and
+    the editor unpacks it.
+    """
+    src = Path(os.environ.get("TINYMIST_PKG") or "/nonexistent")
+    if not (src / "tinymist.js").exists():
+        print("editor: tinymist not added (set TINYMIST_PKG to a wasm-pack build)")
+        return
+    dest.mkdir(parents=True, exist_ok=True)
+    shutil.copy(src / "tinymist.js", dest / "tinymist.js")
+    if (src / "tinymist_bg.wasm.gz").exists():
+        shutil.copy(src / "tinymist_bg.wasm.gz", dest / "tinymist_bg.wasm.gz")
+    else:
+        with open(src / "tinymist_bg.wasm", "rb") as f, gzip.open(dest / "tinymist_bg.wasm.gz", "wb", 9) as g:
+            shutil.copyfileobj(f, g)
+    print(f"editor: added tinymist from {src}")
 
 
 def main() -> None:
