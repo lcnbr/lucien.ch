@@ -10,10 +10,13 @@
   const MAX_DEPTH = 3;
   let card = null, owner = null, showTimer = 0, hideTimer = 0, lastPointer = "mouse";
 
+  // The editor's preview is an about:srcdoc frame (origin "null"); its links
+  // resolve against the site, which is the frame's base URL.
+  const origin = location.origin !== "null" ? location.origin : new URL(document.baseURI).origin;
   const internal = a => {
     if (!a.href || a.target || a.hasAttribute("download") || a.closest(".hover-card")) return false;
     const u = new URL(a.href, location.href);
-    if (u.origin !== location.origin) return false;
+    if (u.origin !== origin) return false;
     if (/\.(xml|json|pdf|png|jpe?g|webp|avif|svg)$/i.test(u.pathname)) return false;
     return true;
   };
