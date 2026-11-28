@@ -12,9 +12,12 @@ with Nix, `nix develop` gives both, and Node for search.
 cargo site build            # build into dist/
 cargo site build --watch    # live-reloading preview on http://127.0.0.1:3000
 cargo site build --search   # also build the Pagefind search index (needs npx)
-cargo site serve            # serve dist/ on http://localhost:8000
+cargo site serve            # serve dist/ on http://127.0.0.1:8000
 cargo site help             # every command and option
 ```
+
+`cargo site serve --host 0.0.0.0` also lets other devices on the network (a
+phone) reach it, and `--dir DIR` serves another build than `dist/`.
 
 `cargo site` is the build tool in [`tools/site/`](tools/site) (an alias in
 `.cargo/config.toml`; the first run compiles it). `cargo site build` writes
@@ -63,7 +66,7 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
 
 `/cv/` shows the CV in English and French with a switch (`/cv/#fr` opens
 the French one). The text of both languages lives in `lib/cv.typ`; the page
-is `content/pages/cv.typ`, and `scripts/build.py` also compiles
+is `content/pages/cv.typ`, and `cargo site build` also compiles
 `cv/cv-pdf.typ` into `/cv/lucien-huber-cv-en.pdf` and `-fr.pdf`. Phone,
 address and birthday are not in the repository, which is public: pass them
 as `--input`s to put them in a PDF you build yourself (see the top of
@@ -148,7 +151,8 @@ the templates check again during the compile and stop the public build if a
 draft got through, so a miss fails the build instead of publishing.
 
 Locally: `cargo site build --drafts` builds the drafts site into
-`dist/` (add `--out dist-drafts` to keep both).
+`dist/` (add `--out dist-drafts` to keep both;
+`cargo site serve --dir dist-drafts` serves it).
 
 The source files themselves are as visible as the repository: while it is
 public, anyone can read a draft's `.typ` file on GitHub.
@@ -189,7 +193,7 @@ License 1.1.
 
 Locally: `cargo site build --editor && cargo site serve`
 (with Nix, `nix develop` first gives Typst, Rust and Node),
-then open http://localhost:8000/edit/. `cargo site serve` sends the
+then open http://127.0.0.1:8000/edit/. `cargo site serve` sends the
 cross-origin-isolation headers that let the compiler run in a worker. On
 Cloudflare, `/edit/` always gets them (`dist/_headers`); other pages get them
 only while the editor is docked (an `edit=1` cookie read by
