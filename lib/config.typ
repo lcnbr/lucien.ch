@@ -13,9 +13,19 @@
     category: "Announcements",
     category-id: "DIC_kwDOV-Hg-c4DMHZj",
   ),
+  // Header: four sections plus search. `also` lists the pages that live
+  // under a section, so its link is marked current there too.
   nav: (
-    (label: "Blog", target: <blog>),
-    (label: "Garden", target: <garden>),
-    (label: "About", target: <about>),
+    (label: "Blog", href: "/blog/", also: ("/tags/",)),
+    (label: "Garden", href: "/garden/", also: ()),
+    (label: "Research", href: "/research/", also: ()),
+    (label: "About", href: "/about/", also: ("/cv/", "/blogroll/")),
+  ),
+  // Pages under About: listed on the About page and in the footer.
+  // (Pages inside a section, like a thesis under Research, get their trail
+  // from the path, see `crumbs` in base.typ.)
+  more: (
+    (label: "CV", href: "/cv/", summary: "Education and work, in English and French, with PDFs."),
+    (label: "Blogroll", href: "/blogroll/", summary: "Recent posts from blogs I read, updated daily."),
   ),
 )

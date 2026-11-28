@@ -1,0 +1,9 @@
+# Blogroll: feeds listed on /blogroll/, fetched at build time (scripts/blogroll.py).
+# One RSS or Atom feed URL per line; text after the URL and lines starting
+# with # are comments. A feed that fails to load is skipped, not fatal.
+#
+# Placeholders, replace with the blogs you read:
+https://matklad.github.io/feed.xml        matklad
+https://jvns.ca/atom.xml                  Julia Evans
+https://terrytao.wordpress.com/feed/      Terence Tao
+https://simonwillison.net/atom/everything/ Simon Willison

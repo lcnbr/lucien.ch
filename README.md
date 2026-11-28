@@ -25,6 +25,7 @@ applies a small MathML fix-up (see below).
 | Blog post | `content/posts/YYYY-MM-DD-slug.typ` | `/blog/slug/` |
 | Garden note | `content/garden/slug.typ` | `/garden/slug/` |
 | Page | `content/pages/slug.typ` | `/slug/` |
+| Thesis chapter | `content/research/<thesis>/slug.typ` (landing: `index.typ`; see `lib/thesis.typ`) | `/research/<thesis>/slug/` |
 
 ```typst
 #import "/lib/post.typ": post        // or note.typ / page.typ
@@ -53,22 +54,52 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
   (no display math or paragraphs inside).
 - **Data for plots:** put CSV/JSON in `data/` and read it with `csv("/data/...")`.
 
+## CV
+
+`/cv/` shows the CV in English and French with a switch (`/cv/#fr` opens
+the French one). The text of both languages lives in `lib/cv.typ`; the page
+is `content/pages/cv.typ`, and `scripts/build.py` also compiles
+`cv/cv-pdf.typ` into `/cv/lucien-huber-cv-en.pdf` and `-fr.pdf`. Phone,
+address and birthday are not in the repository, which is public: pass them
+as `--input`s to put them in a PDF you build yourself (see the top of
+`lib/cv.typ`). The site only shows the name, email and photo.
+
 ## How it fits together
 
 - `site.typ` — bundle entry point: one `document()` per content file, plus the
   home, blog, garden and tag pages, `feed.xml` and `garden/graph.json`.
 - `lib/` — templates (`base`, `post`, `note`, `page`, `indexes`) and helpers.
-- `assets/` — CSS, fonts, `graph.js` (the notes graph) and `hover.js` (hover
+  Every page goes through `shell` in `lib/base.typ`: one header, one page head
+  (trail of links, heading, meta line) and one footer. The header has four
+  sections (Blog, Garden, Research, About); theses live under Research, CV and
+  Blogroll under About.
+  Both lists are in `lib/config.typ` (`nav`, `more`), so a new page is added
+  there, not in the header code.
+- `assets/` — CSS, fonts, `graph.js` (the notes graph), `hover.js` (hover
   previews of linked pages, equations and figures, plus "+" toggles that unfold a
-  garden note inline). Both have no dependencies.
+  garden note inline) and `mark.js` (the scroll mark: the logo from the CV runs
+  round the edge of the window as the page scrolls, leaving a line behind it).
+  None has dependencies.
 - `scripts/mathml_fix.py` — Chromium sizes stretchy delimiters by their widest
-  variant, which makes `f(x)` look like `f ( x )` with New Computer Modern Math.
+  variant, which makes `f(x)` look like `f ( x )` with some math fonts.
   The fix marks fences around short content as `stretchy="false"`.
 - `.github/workflows/build.yml` — builds on every push and PR, uploads the site
   as an artifact, and deploys to Cloudflare Pages once the
   `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets are set.
 
 Typst's HTML and bundle export are experimental, so the Typst version is pinned.
+
+## Blogroll
+
+`/blogroll/` lists the newest posts of the blogs in [`blogroll.txt`](blogroll.txt),
+newest first (idea from [matklad](https://matklad.github.io/links.html)). Add one
+RSS or Atom feed URL per line; anything after the URL is a comment.
+
+`scripts/blogroll.py` fetches the feeds at build time (three newest posts per
+blog) into `build/blogroll.json`, which `site.typ` reads. A feed that fails is
+skipped with a warning, never fatal. CI rebuilds main every day at 05:17 UTC so
+the page stays fresh. `python3 scripts/build.py --offline` skips the fetch and
+reuses the last one.
 
 ## Drafts
 
@@ -116,9 +147,20 @@ public, anyone can read a draft's `.typ` file on GitHub.
 
 ## Fonts
 
-`assets/fonts/` holds New Computer Modern (text subset to Latin and Greek) and
-New Computer Modern Math, converted to WOFF2 from the copies shipped with Typst.
-They are distributed under the GUST Font License.
+The site uses two faces and one math font:
+
+- **Literata** for reading text, made for long reading on screens.
+- **STIX Two Math** for equations.
+- **Atkinson Hyperlegible** for headings, navigation and small print, as in
+  the CV PDF.
+
+`assets/fonts/` holds them as WOFF2 for the browser. Literata is subset to
+Latin and Greek. `fonts/` holds Literata and STIX Two Math as TTF/OTF for
+Typst, which draws diagrams, plots and `#svg-math` as SVG with the same fonts
+(see `shell` in `lib/base.typ`). `build.py` passes it with `--font-path`, and
+the editor loads it too. Literata 3.103 and STIX Two 2.13 come from nixpkgs,
+Atkinson Hyperlegible from `cv/fonts/`. All three are under the SIL Open Font
+License 1.1.
 
 ## Editing in the browser
 
@@ -140,7 +182,10 @@ They are distributed under the GUST Font License.
 Locally: `python3 scripts/build.py --editor && python3 scripts/serve.py`
 (with Nix, `nix develop` first gives Typst, Python and Node),
 then open http://localhost:8000/edit/. `serve.py` sends the
-cross-origin-isolation headers (also set for the whole site on Cloudflare in
-`dist/_headers`) that let the compiler run in a worker; without them it needs
+cross-origin-isolation headers that let the compiler run in a worker. On
+Cloudflare, `/edit/` always gets them (`dist/_headers`); other pages get them
+only while the editor is docked (an `edit=1` cookie read by
+`functions/_middleware.js`), because isolation would also block the giscus
+comments for readers; without them it needs
 a browser with JSPI (recent Chrome/Edge). The editor's status line names each
 startup step, and the browser console logs `[edit]` timings for each.

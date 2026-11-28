@@ -11,6 +11,7 @@ Usage:
     python3 scripts/build.py --search   # also run pagefind (needs npx)
     python3 scripts/build.py --editor   # also build the /edit/ page (needs npm)
     python3 scripts/build.py --drafts   # private build: include drafts, behind GitHub login
+    python3 scripts/build.py --offline  # don't fetch the blogroll feeds (reuse the last fetch)
 
 Drafts (`draft: true` in a file's template call) are left out of the normal
 build entirely: no page, no listing, no search entry, no graph node, no feed
@@ -101,9 +102,24 @@ def page_entries() -> tuple[list[dict], list[str]]:
         "posts": lambda slug: f"blog/{slug}",
         "garden": lambda slug: f"garden/{slug}",
         "pages": lambda slug: slug,
+        # Research: content/research/index.typ is /research/ (slug "research").
+        # A thesis is a folder: content/research/<thesis>/index.typ is
+        # /research/<thesis>/ (slug "<thesis>"), and a chapter
+        # content/research/<thesis>/<stem>.typ is /research/<thesis>/<stem>/
+        # (slug "<thesis>-<stem>"). See lib/thesis.typ.
+        "research": None,
     }
+    def research_place(path: Path) -> tuple[str, str]:
+        rel = path.relative_to(CONTENT / "research")
+        if len(rel.parts) == 1:
+            return ("research", "research") if rel.stem == "index" else (rel.stem, f"research/{rel.stem}")
+        thesis = rel.parts[0]
+        if rel.stem == "index":
+            return thesis, f"research/{thesis}"
+        return f"{thesis}-{rel.stem}", f"research/{thesis}/{rel.stem}"
     for section, prefix in sections.items():
-        for path in sorted((CONTENT / section).glob("*.typ")):
+        pattern = "**/*.typ" if section == "research" else "*.typ"
+        for path in sorted((CONTENT / section).glob(pattern)):
             stem = path.stem
             post_date = None
             if section == "posts":
@@ -112,6 +128,8 @@ def page_entries() -> tuple[list[dict], list[str]]:
                     sys.exit(f"error: post {path} must be named YYYY-MM-DD-slug.typ")
                 post_date, stem = m.groups()
             slug = stem
+            if section == "research":
+                slug, research_base = research_place(path)
             if not SLUG.match(slug):
                 sys.exit(f"error: {path}: slug '{slug}' must be lowercase letters, digits and dashes")
             if slug in seen:
@@ -125,7 +143,7 @@ def page_entries() -> tuple[list[dict], list[str]]:
                 hidden.extend(l for l in LABEL_DEF.findall(path.read_text(encoding="utf-8")) if l not in hidden)
                 continue
             created, updated = git_dates(path)
-            base = prefix(slug)
+            base = research_base if section == "research" else prefix(slug)
             entries.append({
                 "slug": slug,
                 "section": section,
@@ -254,6 +272,13 @@ def write_drafts_gate() -> None:
           "LOCKED (DRAFTS_ACCESS_TEAM not set)"))
 
 
+def write_cors_headers() -> None:
+    """Let giscus' iframe (giscus.app) load the comments theme and its fonts."""
+    with open(DIST / "_headers", "a") as f:
+        for path in ("/assets/giscus.css", "/assets/fonts/*"):
+            f.write(f"{path}\n  Access-Control-Allow-Origin: *\n")
+
+
 def build_editor() -> None:
     """Copy editor/ to dist/edit/ and vendor the compiler, fonts and packages."""
     out = DIST / "edit"
@@ -261,16 +286,23 @@ def build_editor() -> None:
     vendor = out / "vendor"
     # Cloudflare Pages header rules: cross-origin isolation lets the editor use
     # typst-wasm's worker backend (SharedArrayBuffer). Without it, it falls
-    # back to JSPI, which only recent Chromium-based browsers have. Set on the
-    # whole site: the editor docks into every page and previews pages in an
-    # iframe, and all of them must be isolated. require-corp (not
-    # credentialless) because Safari supports only that; everything the site
-    # loads is same-origin or CORS (GitHub API, package registry).
+    # back to JSPI, which only recent Chromium-based browsers have.
+    # require-corp (not credentialless) because Safari supports only that.
+    # Only /edit/ is always isolated: isolation would also block the giscus
+    # comments iframe for every reader. Pages get isolated only while the
+    # editor is docked on them (edit=1 cookie, see functions/_middleware.js).
     (DIST / "_headers").write_text(
-        "/*\n"
+        "/edit/*\n"
         "  Cross-Origin-Opener-Policy: same-origin\n"
         "  Cross-Origin-Embedder-Policy: require-corp\n"
     )
+    # Run that function on pages only, not on static files. Not on the drafts
+    # site, whose _worker.js must see every request (it is the Access check).
+    if not DRAFTS:
+        (DIST / "_routes.json").write_text(json.dumps({
+            "version": 1, "include": ["/*"],
+            "exclude": ["/assets/*", "/edit/*", "/pagefind/*", "/feed.xml"],
+        }) + "\n")
     with tempfile.TemporaryDirectory() as tmp:
         t = Path(tmp)
         tw = npm_unpack(f"typst-wasm@{EDITOR_NPM['typst-wasm']}", t)
@@ -279,6 +311,9 @@ def build_editor() -> None:
         (vendor / "fonts").mkdir(parents=True, exist_ok=True)
         for f in EDITOR_FONTS:
             shutil.copy(fonts / "dist/files" / f, vendor / "fonts" / f)
+        # The site's own fonts, so diagrams look the same in the preview.
+        for f in (ROOT / "fonts").iterdir():
+            shutil.copy(f, vendor / "fonts" / f.name)
         nt = npm_unpack(f"nanotar@{EDITOR_NPM['nanotar']}", t)
         (vendor / "nanotar").mkdir(exist_ok=True)
         shutil.copy(nt / "dist/index.mjs", vendor / "nanotar/index.mjs")
@@ -322,6 +357,16 @@ def build_editor() -> None:
     print(f"editor: built dist/edit/ with {n} mirrored Typst packages")
 
 
+def build_cv_pdfs() -> None:
+    """The CV as PDF, one per language, next to the /cv/ page (lib/cv.typ)."""
+    for lang in ("en", "fr"):
+        out = DIST / "cv" / f"lucien-huber-cv-{lang}.pdf"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["typst", "compile", "--root", str(ROOT), "--font-path", str(ROOT / "cv" / "fonts"), "--font-path", str(ROOT / "fonts"),
+                        "--input", f"lang={lang}", str(ROOT / "cv" / "cv-pdf.typ"), str(out)], check=True)
+    print("cv: built dist/cv/lucien-huber-cv-{en,fr}.pdf")
+
+
 def vendor_tinymist(dest: Path) -> None:
     """Add the browser build of tinymist (completion, hover, go to definition).
 
@@ -351,6 +396,7 @@ def main() -> None:
     ap.add_argument("--editor", action="store_true")
     ap.add_argument("--drafts", action="store_true", help="include drafts (private build)")
     ap.add_argument("--out", type=Path, help="output directory (default: dist/)")
+    ap.add_argument("--offline", action="store_true", help="don't fetch blogroll feeds")
     args = ap.parse_args()
 
     global DIST, DRAFTS
@@ -366,21 +412,32 @@ def main() -> None:
     print(f"manifest: {len(pages)} pages ({n_drafts} drafts included, {len(hidden)} left out), "
           f"{len(manifest['assets'])} assets")
 
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import blogroll
+    # Feeds for /blogroll/. CI sets BLOGROLL_OFFLINE=1 on the drafts build so it
+    # reuses the public build's fetch.
+    blogroll.write(offline=args.offline or os.environ.get("BLOGROLL_OFFLINE") == "1")
+
     if DIST.exists():
         shutil.rmtree(DIST)
     cmd = ["typst", "watch" if args.watch else "compile",
            "--features", "html,bundle", "--format", "bundle", "--root", str(ROOT),
+           "--font-path", str(ROOT / "fonts"),
            "--input", f"drafts={'true' if DRAFTS else 'false'}",
            str(ROOT / "site.typ"), str(DIST)]
     subprocess.run(cmd, check=True)
 
     if not args.watch:
+        build_cv_pdfs()
         sys.path.insert(0, str(ROOT / "scripts"))
         from mathml_fix import fix_tree
         print(f"mathml_fix: {fix_tree(DIST)} files changed")
 
     if args.editor and not args.watch:
         build_editor()
+
+    if not args.watch:
+        write_cors_headers()
 
     if DRAFTS and not args.watch:
         write_drafts_gate()

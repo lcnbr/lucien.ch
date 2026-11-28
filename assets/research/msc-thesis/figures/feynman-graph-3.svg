@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0.00 0.00 230.14 219.87">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 215.87)">
+<title>
+G
+</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-215.87 226.14,-215.87 226.14,4 -4,4"></polygon> <!-- n1 --> <g id="node1" class="node">
+<title>
+n1
+</title>
+<ellipse fill="black" stroke="black" cx="124.9" cy="-145" rx="1.8" ry="1.8"></ellipse> </g> <!-- n3 --> <g id="node3" class="node">
+<title>
+n3
+</title>
+<ellipse fill="black" stroke="black" cx="80.15" cy="-81.59" rx="1.8" ry="1.8"></ellipse> </g> <!-- n1&#45;&gt;n3 --> <g id="edge6" class="edge">
+<title>
+n1-&gt;n3
+</title>
+<path fill="none" stroke="grey" d="M123.79,-143.43C121.06,-139.56 113.63,-129.03 105.66,-117.73"></path> <path fill="none" stroke="grey" d="M105.66,-117.73C97.69,-106.44 89.18,-94.37 84.28,-87.43"></path> <polygon fill="grey" stroke="grey" points="85.7,-86.41 81.38,-83.33 82.84,-88.42 85.7,-86.41"></polygon> <text text-anchor="middle" x="95.28" y="-119.63" font-family="Times,serif" font-size="14.00">q₂</text> </g> <!-- n5 --> <!-- n1&#45;&gt;n5 --> <g id="edge2" class="edge">
+<title>
+n1-&gt;n5
+</title>
+<path fill="none" stroke="red" stroke-width="2" d="M126.89,-144.91C138.02,-144.44 192.85,-142.11 212.83,-141.26"></path> <polygon fill="red" stroke="red" stroke-width="2" points="212.91,-143.01 217.83,-141.05 212.76,-139.51 212.91,-143.01"></polygon> <text text-anchor="middle" x="161.11" y="-147.29" font-family="Times,serif" font-size="14.00">p₂</text> </g> <!-- n2 --> <g id="node2" class="node">
+<title>
+n2
+</title>
+<ellipse fill="black" stroke="black" cx="148.93" cy="-109.46" rx="1.8" ry="1.8"></ellipse> </g> <!-- n2&#45;&gt;n1 --> <g id="edge5" class="edge">
+<title>
+n2-&gt;n1
+</title>
+<path fill="none" stroke="red" stroke-width="2" d="M147.9,-110.98C146.29,-113.36 143,-118.23 139.39,-123.55"></path> <path fill="none" stroke="lightcoral" stroke-width="2" d="M139.39,-123.55C135.79,-128.88 131.88,-134.67 129.03,-138.89"></path> <polygon fill="lightcoral" stroke="lightcoral" stroke-width="2" points="127.47,-138.06 126.12,-143.18 130.37,-140.02 127.47,-138.06"></polygon> <text text-anchor="middle" x="129.71" y="-129.14" font-family="Times,serif" font-size="14.00">q₁</text> </g> <!-- n2&#45;&gt;n3 --> <g id="edge7" class="edge">
+<title>
+n2-&gt;n3
+</title>
+<path fill="none" stroke="grey" d="M147.23,-108.77C143.06,-107.08 131.81,-102.52 119.68,-97.6"></path> <path fill="none" stroke="grey" d="M119.68,-97.6C107.55,-92.69 94.55,-87.42 86.9,-84.32"></path> <polygon fill="grey" stroke="grey" points="87.34,-82.61 82.05,-82.35 86.02,-85.85 87.34,-82.61"></polygon> <text text-anchor="middle" x="108.31" y="-100.74" font-family="Times,serif" font-size="14.00">q₃</text> </g> <!-- n7 --> <!-- n3&#45;&gt;n7 --> <g id="edge4" class="edge">
+<title>
+n3-&gt;n7
+</title>
+<path fill="none" stroke="blue" stroke-width="2" d="M80.16,-79.62C80.2,-69.9 80.36,-26.76 80.42,-9.34"></path> <polygon fill="blue" stroke="blue" stroke-width="2" points="82.17,-9.2 80.44,-4.19 78.67,-9.18 82.17,-9.2"></polygon> <text text-anchor="middle" x="71.54" y="-48.68" font-family="Times,serif" font-size="14.00">p₄</text> </g> <!-- n4 --> <!-- n4&#45;&gt;n2 --> <g id="edge1" class="edge">
+<title>
+n4-&gt;n2
+</title>
+<path fill="none" stroke="lightcoral" stroke-width="2" d="M146.55,-207.77C146.84,-195.93 148.26,-137.22 148.75,-116.62"></path> <polygon fill="lightcoral" stroke="lightcoral" stroke-width="2" points="150.51,-116.58 148.88,-111.54 147.01,-116.5 150.51,-116.58"></polygon> <text text-anchor="middle" x="138.9" y="-166.4" font-family="Times,serif" font-size="14.00">p₁</text> </g> <!-- n6 --> <!-- n6&#45;&gt;n3 --> <g id="edge3" class="edge">
+<title>
+n6-&gt;n3
+</title>
+<path fill="none" stroke="deepskyblue" stroke-width="2" d="M4.25,-95.34C14.42,-93.5 56.21,-85.92 73.06,-82.87"></path> <polygon fill="deepskyblue" stroke="deepskyblue" stroke-width="2" points="73.71,-84.53 78.32,-81.92 73.09,-81.09 73.71,-84.53"></polygon> <text text-anchor="middle" x="29.91" y="-93.31" font-family="Times,serif" font-size="14.00">p₃</text> </g> </g>
+</svg>

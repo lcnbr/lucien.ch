@@ -1,11 +1,18 @@
 /* lucien.ch — base styles */
 
-@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
-@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
-@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: swap; }
-/* Typst's default math font, so MathML matches the PDF on every OS. */
-@font-face { font-family: "NewCMMath"; src: url("fonts/NewCMMath-Regular.woff2") format("woff2"); font-display: block; }
+/* Two faces, and a math font to go with the text. Reading text: Literata,
+   made for long reading on screens. Equations (MathML): STIX Two Math.
+   Headings, navigation and small print: Atkinson Hyperlegible, the face of
+   the CV. Typst draws diagrams with the same fonts (fonts/, lib/base.typ). */
+@font-face { font-family: "Literata"; src: url("fonts/Literata-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Literata"; src: url("fonts/Literata-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Literata"; src: url("fonts/Literata-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Literata"; src: url("fonts/Literata-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "STIX Two Math"; src: url("fonts/STIXTwoMath-Regular.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Atkinson"; src: url("fonts/AtkinsonHyperlegible-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Atkinson"; src: url("fonts/AtkinsonHyperlegible-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Atkinson"; src: url("fonts/AtkinsonHyperlegible-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Atkinson"; src: url("fonts/AtkinsonHyperlegible-700-italic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: swap; }
 
 :root {
   --fg: #1d1d1f;
@@ -13,67 +20,183 @@
   --bg: #fdfcf9;
   --accent: #1f5fa8;
   --rule: #e4e2dc;
+  --tint: color-mix(in srgb, var(--fg) 4%, transparent);
   --measure: 40rem;
+  --serif: "Literata", Georgia, serif;
+  --sans: "Atkinson", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "DejaVu Sans Mono", Menlo, monospace;
+  /* One type scale and one spacing scale for every page. Text steps grow by
+     a quarter; the two display steps (titles, the home page) also grow with
+     the window. */
+  --step--2: 0.72rem; --step--1: 0.85rem; --step-0: 1rem; --step-1: 1.25rem; --step-2: 1.6rem;
+  --step-3: clamp(2.1rem, 1.5rem + 2.4vw, 3rem);
+  --step-4: clamp(2.2rem, 1.3rem + 3.6vw, 3.5rem);
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 1rem; --space-4: 1.5rem; --space-5: 2.5rem; --space-6: 3.5rem;
+  --radius: 6px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --seedling: #8a6d00; --budding: #3c7d2a; --evergreen: #1b6b52; --draft: #9a3412;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --fg: #e8e6e1; --muted: #9a9893; --bg: #16161a; --accent: #8db8ea; --rule: #2c2c31; }
+  :root { --fg: #e8e6e1; --muted: #9a9893; --bg: #16161a; --accent: #8db8ea; --rule: #2c2c31;
+          --seedling: #d6b44a; --budding: #8cc77a; --evergreen: #6fcfae; --draft: #f0a060; }
   /* Typst frames are drawn in black; invert them on dark backgrounds. */
   .diagram svg, .svg-math svg { filter: invert(0.92) hue-rotate(180deg); }
 }
 
 * { box-sizing: border-box; }
-html { font-size: 112.5%; }
+html { font-size: 112.5%; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   margin: 0; color: var(--fg); background: var(--bg);
-  font-family: "NewCM", "Latin Modern Roman", Georgia, serif;
-  line-height: 1.55; text-rendering: optimizeLegibility;
+  font-family: var(--serif); font-size: 0.95rem; line-height: 1.65;
+  text-rendering: optimizeLegibility; font-kerning: normal;
 }
 main, .site-header, .site-footer { max-width: var(--measure); margin: 0 auto; padding: 0 1.25rem; }
-main { padding-bottom: 3rem; }
+main { padding-bottom: var(--space-6); }
+::selection { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
 
-math { font-family: "NewCMMath", "Latin Modern Math", "STIX Two Math", math; }
+/* STIX Two Math has one weight: in bold headings, keep it rather than let
+   the browser fake a bold. */
+math { font-family: "STIX Two Math", math; font-weight: 400; }
 math[display="block"] { margin: 1em 0; overflow-x: auto; overflow-y: hidden; padding: 0.1em 0; }
 
-a { color: var(--accent); text-decoration-thickness: 0.06em; text-underline-offset: 0.15em; }
-h1 { font-size: 2rem; line-height: 1.2; margin: 1.5rem 0 0.5rem; }
-h2 { font-size: 1.4rem; margin-top: 2rem; }
-h3 { font-size: 1.15rem; }
-code, pre { font-family: ui-monospace, "DejaVu Sans Mono", Menlo, monospace; font-size: 0.85em; }
-pre { overflow-x: auto; padding: 0.8em 1em; background: color-mix(in srgb, var(--fg) 5%, transparent); border-radius: 6px; }
-figure { margin: 1.5em 0; text-align: center; }
-figcaption { color: var(--muted); font-size: 0.9em; margin-top: 0.4em; }
-blockquote { margin: 1em 0; padding-left: 1em; border-left: 3px solid var(--rule); color: var(--muted); }
-table { border-collapse: collapse; margin: 1em auto; }
-td, th { padding: 0.3em 0.7em; border-bottom: 1px solid var(--rule); }
+/* Links: a light underline that darkens on hover. */
+a {
+  color: var(--accent); text-decoration-thickness: 0.07em; text-underline-offset: 0.18em;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  transition: color 120ms, text-decoration-color 120ms, border-color 120ms;
+}
+a:hover { text-decoration-color: currentColor; }
 
-.site-header { display: flex; justify-content: space-between; align-items: baseline; padding-top: 1.25rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--rule); }
-.site-title { font-weight: 700; color: var(--fg); text-decoration: none; font-size: 1.15rem; }
-.site-header nav a { margin-left: 1.1rem; color: var(--muted); text-decoration: none; }
-.site-header nav a:hover { color: var(--accent); }
-.site-footer { color: var(--muted); font-size: 0.85rem; padding-top: 1rem; padding-bottom: 2rem; border-top: 1px solid var(--rule); }
+/* Headings in Atkinson, tight and dark; body text in Literata. */
+h1, h2, h3, h4, h5, h6 { font-family: var(--sans); font-weight: 700; color: var(--fg); text-wrap: balance; }
+h1 { font-size: var(--step-3); line-height: 1.05; letter-spacing: -0.025em; margin: 0; }
+h2 { font-size: var(--step-2); line-height: 1.15; letter-spacing: -0.015em; margin: var(--space-6) 0 var(--space-3); }
+h3 { font-size: var(--step-1); line-height: 1.25; letter-spacing: -0.01em; margin: var(--space-5) 0 var(--space-2); }
+h4, h5, h6 { font-size: var(--step-0); line-height: 1.35; margin: var(--space-4) 0 var(--space-2); }
+:is(h2, h3) + :is(h3, h4) { margin-top: var(--space-3); }
+p, li, dd, blockquote, figcaption { text-wrap: pretty; }
+code, pre { font-family: var(--mono); font-size: 0.85em; }
+pre { overflow-x: auto; padding: 0.8em 1em; background: var(--tint); border-radius: var(--radius); line-height: 1.5; }
+figure { margin: 1.75em 0; text-align: center; }
+figure pre { text-align: left; }
+figcaption { color: var(--muted); font-size: 0.9em; margin-top: 0.5em; }
+blockquote { margin: 1.25em 0; padding-left: 1em; border-left: 2px solid var(--fg); color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--rule); margin: var(--space-5) 0; }
+/* A table wider than the column (the thesis's Feynman rules on a phone)
+   scrolls inside its own box, not the page. */
+table { display: block; width: fit-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 1em auto; font-variant-numeric: tabular-nums; }
+td, th { padding: 0.35em 0.7em; border-bottom: 1px solid var(--rule); }
+th { font: 700 var(--step--1)/1.4 var(--sans); text-align: left; border-bottom-color: var(--fg); }
 
-.meta { color: var(--muted); font-size: 0.9rem; margin-top: 0; }
+/* Site header: logo and name, the sections, search. The current section is underlined. */
+.site-header {
+  display: flex; justify-content: space-between; align-items: center; gap: var(--space-3);
+  padding-top: var(--space-5); padding-bottom: var(--space-3); border-bottom: 1px solid var(--rule);
+  font-family: var(--sans);
+}
+.site-title { display: inline-flex; align-items: center; gap: 0.55em; font-weight: 700; font-size: var(--step-1); letter-spacing: -0.015em; color: var(--fg); text-decoration: none; }
+/* The logo (lib/base.typ), a bar's height below the cap height so it sits on the x-height. */
+.site-title .logo { flex: none; width: 2.6em; height: auto; fill: currentColor; margin-top: 0.08em; transition: fill 160ms; }
+.site-title:hover .logo { fill: var(--accent); }
+.site-header nav { display: flex; align-items: center; gap: var(--space-4); font-size: 0.95rem; }
+.site-header nav a { color: var(--muted); text-decoration: none; padding: var(--space-1) 0; box-shadow: inset 0 -2px 0 transparent; transition: color 120ms, box-shadow 160ms var(--ease); }
+.site-header nav a:hover { color: var(--fg); }
+.site-header nav a[aria-current] { color: var(--fg); box-shadow: inset 0 -2px 0 var(--accent); }
+
+/* Site footer: the pages under About, RSS, and the editor link. */
+.site-footer {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2) var(--space-4);
+  color: var(--muted); font: var(--step--1)/1.5 var(--sans);
+  padding-top: var(--space-3); padding-bottom: var(--space-6); border-top: 1px solid var(--rule);
+}
+.site-footer nav { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); }
+.site-footer a { color: var(--muted); text-decoration: none; }
+.site-footer a:hover { color: var(--fg); }
+
+/* Page head (lib/base.typ): trail, heading, meta line. The same on every page. */
+.page-head { margin: var(--space-6) 0 var(--space-5); }
+.crumbs { display: flex; flex-wrap: wrap; gap: 0 var(--space-2); font: var(--step--1)/1.4 var(--sans); margin-bottom: var(--space-3); }
+.crumbs a { color: var(--muted); text-decoration: none; }
+.crumbs a:hover { color: var(--accent); }
+.crumbs .sep { color: var(--rule); }
+.page-head .meta { margin: var(--space-3) 0 0; }
+/* Buttons beside the meta line (`actions` in base.typ), e.g. on the CV. */
+.page-head .meta-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-4); margin-top: var(--space-3); }
+.page-head .meta-row .meta { margin: 0; }
+.page-actions { display: flex; align-items: center; gap: var(--space-2); }
+/* A small pill button, the same height as the language switch. */
+.button {
+  display: inline-flex; align-items: center; gap: 0.45em; padding: calc(0.35em + 2px) 0.85em;
+  font: 700 var(--step--2)/1 var(--sans); letter-spacing: 0.08em; color: var(--fg); text-decoration: none;
+  border: 1px solid var(--rule); border-radius: 999px;
+}
+.button:hover { color: var(--accent); border-color: var(--accent); }
+.button svg { width: 1.15em; height: 1.15em; margin: -0.1em 0; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.meta { color: var(--muted); font-family: var(--sans); font-size: var(--step--1); font-variant-numeric: tabular-nums; margin-top: 0; }
+.meta a { color: inherit; }
+.meta a:hover { color: var(--accent); }
 .tag { color: var(--muted); text-decoration: none; }
-.status { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.1em 0.45em; border-radius: 3px; border: 1px solid var(--rule); }
-.status.seedling { color: #8a6d00; } .status.budding { color: #3c7d2a; } .status.evergreen { color: #1b6b52; }
-/* Drafts: only on the private drafts site (scripts/build.py --drafts). */
-.draft-badge { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.1em 0.45em; border-radius: 3px; color: #9a3412; border: 1px dashed currentColor; }
-.draft-banner { color: #9a3412; border: 1px dashed currentColor; border-radius: 4px; padding: 0.4em 0.7em; font-size: 0.9rem; }
+.lede { font-size: 1.15rem; line-height: 1.5; margin: 0 0 var(--space-5); }
+/* Home page: the site description, set large. */
+.home main > .lede { font: 700 var(--step-4)/1.06 var(--sans); letter-spacing: -0.03em; margin: var(--space-6) 0; text-wrap: balance; }
 
-.list { list-style: none; padding: 0; }
-.list li { margin: 0.9em 0; }
-.list time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 0.4em; font-size: 0.9em; }
-.list .summary { margin: 0.15em 0 0; color: var(--muted); font-size: 0.92em; }
-.lede { font-size: 1.15rem; }
+/* Badges: note status and drafts share one shape. */
+.status, .draft-badge { font: 700 var(--step--2)/1 var(--sans); text-transform: uppercase; letter-spacing: 0.08em; padding: 0.3em 0.5em; border-radius: 4px; border: 1px solid currentColor; vertical-align: 0.2em; }
+.status.seedling { color: var(--seedling); } .status.budding { color: var(--budding); } .status.evergreen { color: var(--evergreen); }
+/* Drafts: only on the private drafts site (scripts/build.py --drafts). */
+.draft-badge { color: var(--draft); border-style: dashed; }
+.draft-banner { color: var(--draft); border: 1px dashed currentColor; border-radius: var(--radius); padding: 0.4em 0.7em; font: var(--step--1)/1.5 var(--sans); }
+
+/* Section heads: a short label under a dark rule. Lists on the home page,
+   backlinks, comments, blogroll, CV. */
+.section-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); margin: var(--space-6) 0 var(--space-4); padding-top: var(--space-2); border-top: 2px solid var(--fg); }
+.section-head h2, main h2:has(+ .list), .backlinks h2, .comments h2, .cv h2 {
+  font: 700 var(--step--2)/1.4 var(--sans); text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg); margin: 0;
+}
+/* A heading written in a page right above a list of pages (About, Research)
+   gets the same look. */
+main h2:has(+ .list) { margin: var(--space-6) 0 var(--space-4); padding-top: var(--space-2); border-top: 2px solid var(--fg); }
+.section-head a { font: var(--step--1)/1.4 var(--sans); color: var(--muted); text-decoration: none; white-space: nowrap; }
+.section-head a:hover { color: var(--accent); }
+
+/* Lists of pages: blog, garden, tags, home, blogroll, About. Titles are set
+   like small headings, with the date or year above them. */
+.list { list-style: none; padding: 0; margin: 0; }
+.list li { margin: 0 0 var(--space-4); }
+.list.compact li { margin-bottom: var(--space-1); }
+.list:not(.feed) > li > a:not(.quiet) { font: 700 var(--step-1)/1.25 var(--sans); letter-spacing: -0.01em; color: var(--fg); text-decoration: none; }
+.list:not(.feed) > li > a:not(.quiet):hover { color: var(--accent); }
+.list time, .list .list-meta { display: block; font: var(--step--1)/1.5 var(--sans); color: var(--muted); font-variant-numeric: tabular-nums; margin-bottom: 0.1rem; }
+.list .summary { margin: var(--space-1) 0 0; color: var(--muted); font-size: 0.95em; line-height: 1.5; }
+a.quiet { color: var(--muted); text-decoration: none; }
+a.quiet:hover { color: var(--accent); }
+.list.compact a.quiet { font-size: var(--step--1); }
+
+/* Previous / next between pages of a series (thesis chapters). */
+.pager { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin: var(--space-6) 0 0; }
+.pager a {
+  display: block; height: 100%; padding: var(--space-3); border: 1px solid var(--rule); border-radius: var(--radius);
+  font: 700 var(--step-0)/1.35 var(--sans); color: var(--fg); text-decoration: none;
+}
+.pager a:hover { border-color: var(--accent); color: var(--accent); }
+.pager small { display: block; font: 700 var(--step--2)/1.6 var(--sans); text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: var(--space-1); }
+.pager .next { text-align: right; grid-column: 2; }
+
+/* Raster and scanned figures keep a white plate in dark mode too. */
+img.plate { max-width: 100%; height: auto; background: #fff; border-radius: var(--radius); padding: var(--space-1); }
+@media (prefers-color-scheme: dark) { img.plate { filter: brightness(0.92); } }
+.subfigs { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: var(--space-3); align-items: center; }
+@media (max-width: 600px) { .subfigs { grid-template-columns: repeat(min(var(--cols, 4), 2), minmax(0, 1fr)); } }
 
 /* overflow-x: auto also clips vertically, so leave room for labels that overhang the frame. */
 .diagram, .svg-math { margin: 1.5em 0; padding: 0.75em 0; overflow-x: auto; }
 .diagram svg, .svg-math svg { margin: 0 auto; max-width: 100%; height: auto; }
 
-.backlinks { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: 0.95rem; }
-.backlinks h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-top: 0; }
-.garden-graph { height: 360px; margin: 1rem 0; border: 1px solid var(--rule); border-radius: 6px; }
-.local-graph { height: 220px; margin: 1rem 0; border: 1px solid var(--rule); border-radius: 6px; }
+.backlinks { margin-top: var(--space-6); padding-top: var(--space-2); border-top: 2px solid var(--fg); font-size: 0.95rem; }
+.backlinks ul { padding-left: 1.2em; margin: var(--space-2) 0 0; }
+.garden-graph { height: 360px; margin: 0 0 var(--space-4); border: 1px solid var(--rule); border-radius: var(--radius); }
+.local-graph { height: 220px; margin: var(--space-3) 0; border: 1px solid var(--rule); border-radius: var(--radius); }
 .local-graph:empty, .garden-graph:empty { display: none; }
 
 /* Hover previews and inline windows (assets/hover.js) */
@@ -85,7 +208,7 @@ td, th { padding: 0.3em 0.7em; border-bottom: 1px solid var(--rule); }
 }
 .hover-card > :first-child { margin-top: 0; }
 .hover-card > :last-child { margin-bottom: 0; }
-.hover-card .hover-title, .window .hover-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 0.2rem; }
+.hover-card .hover-title, .window .hover-title { font: 700 1.05rem/1.3 var(--sans); letter-spacing: -0.01em; margin-bottom: 0.25rem; }
 .hover-card .meta { margin-bottom: 0.5rem; }
 .hover-card figure, .hover-card .diagram { margin: 0.5em 0; }
 .window-toggle {
@@ -121,6 +244,8 @@ section[role="doc-endnotes"] { display: none; }
 .sidenote-mark { color: var(--muted); margin-right: 0.15em; }
 .sidenote-toggle:checked + .sidenote { display: block; }
 .sidenote math { font-size: 1em; }
+/* Inline equations don't wrap: a long one scrolls inside its note. */
+.sidenote { overflow-x: auto; overflow-y: hidden; }
 /* Previews of other pages (hover.js) strip ids, so their toggles would be dead. */
 .hover-card .sidenote, .window .sidenote { display: none !important; }
 .hover-card .sidenote-number, .window .sidenote-number { pointer-events: none; color: inherit; }
@@ -128,7 +253,7 @@ section[role="doc-endnotes"] { display: none; }
 /* Wide screens: notes sit in the right margin beside the line that cites them,
    and the column shifts left so text and margin are centred together. */
 @media (min-width: 1100px) {
-  html:not(.editing) body:has(main .sidenote) :is(main, .site-header, .site-footer) {
+  html:not(.editing) body:has(main :is(.sidenote, .cv-photo)) :is(main, .site-header, .site-footer) {
     margin-left: max(0px, calc((100% - var(--measure) - var(--sn-gap) - var(--sn-w)) / 2));
   }
   html:not(.editing) .sidenote {
@@ -158,7 +283,7 @@ html.edit-resizing { cursor: col-resize; user-select: none; }
 .edit-tab {
   position: fixed; right: 0; top: 50%; z-index: 40; display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 12px 8px; border: 0; border-radius: 10px 0 0 10px; cursor: pointer;
-  background: var(--fg); color: var(--bg); font: 600 13px/1 system-ui, sans-serif; letter-spacing: 0.04em;
+  background: var(--fg); color: var(--bg); font: 700 13px/1 var(--sans); letter-spacing: 0.04em;
   transform: translate(calc(100% - 6px), -50%); opacity: 0.55; transition: transform 200ms var(--edit-ease), opacity 200ms;
 }
 .edit-tab:hover, .edit-tab:focus-visible { transform: translate(0, -50%); opacity: 1; }
@@ -169,20 +294,24 @@ html.editing .edit-tab { opacity: 0; pointer-events: none; }
   html.editing { padding-right: 0; padding-bottom: 58vh; }
   .edit-dock { top: auto; left: 0; width: auto; height: 58vh; transform: translateY(100%); box-shadow: 0 -12px 30px rgb(0 0 0 / 0.15); }
   .edit-dock-handle { display: none; }
-  .edit-tab { top: auto; bottom: 16px; right: 16px; flex-direction: row; padding: 10px 14px; border-radius: 999px; transform: none; opacity: 0.9; }
-  .edit-tab:hover, .edit-tab:focus-visible { transform: none; }
-  .edit-tab span { writing-mode: horizontal-tb; }
+  /* Phones: a small round button, label kept for screen readers, and only
+     for the author (edit.js); readers have the footer link. */
+  html:not(.edit-author) .edit-tab { display: none; }
+  .edit-tab { top: auto; bottom: 16px; right: 16px; width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; transform: none; opacity: 0.6; box-shadow: 0 4px 14px rgb(0 0 0 / 0.18); }
+  .edit-tab:hover, .edit-tab:focus-visible { transform: none; opacity: 1; }
+  .edit-tab span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
 @media (prefers-reduced-motion: reduce) { html, .edit-dock, .edit-tab { transition: none; } }
 
 /* Search (search.js): a header button and an overlay with live results. */
+.search-open svg { width: 0.95em; height: 0.95em; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 .search-open {
-  margin-left: 1.1rem; padding: 0.15em 0.35em 0.15em 0.6em; border: 1px solid var(--rule); border-radius: 999px;
+  padding: 0.15em 0.35em 0.15em 0.6em; border: 1px solid var(--rule); border-radius: 999px;
   background: transparent; color: var(--muted); font: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5em;
 }
 .search-open:hover { color: var(--accent); border-color: var(--accent); }
 .search-open kbd, .search-dialog kbd {
-  font: 0.72em/1 system-ui, sans-serif; padding: 0.3em 0.45em; border-radius: 6px;
+  font: 0.72em/1 var(--sans); padding: 0.3em 0.45em; border-radius: 6px;
   background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--muted);
 }
 .search-dialog {
@@ -196,25 +325,97 @@ html.editing .edit-tab { opacity: 0; pointer-events: none; }
 .search-box { display: flex; align-items: center; gap: 0.7rem; padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--rule); }
 .search-box svg { width: 1.15rem; height: 1.15rem; flex: none; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; }
 .search-box input {
-  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--fg); font: inherit; font-size: 1.1rem;
+  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--fg); font: 1.1rem/1.4 var(--sans);
 }
 .search-box input::-webkit-search-cancel-button { display: none; }
 .search-results { list-style: none; margin: 0; padding: 0.4rem; overflow-y: auto; }
 .search-results:empty { display: none; }
 .search-results a { display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 1rem; padding: 0.6rem 0.8rem; border-radius: 9px; color: inherit; text-decoration: none; }
 .search-results li[aria-selected="true"] a { background: color-mix(in srgb, var(--accent) 12%, transparent); }
-.search-title { font-weight: 600; }
-.search-where { font: 0.75em/1.9 system-ui, sans-serif; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.search-title { font-family: var(--sans); font-weight: 700; }
+.search-where { font: 700 0.72em/2 var(--sans); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 .search-excerpt { grid-column: 1 / -1; color: var(--muted); font-size: 0.9em; line-height: 1.45; }
 .search-excerpt mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--fg); border-radius: 2px; padding: 0 0.1em; }
-.search-note { margin: 0; padding: 0.55rem 1.1rem; border-top: 1px solid var(--rule); color: var(--muted); font: 0.78rem/1.4 system-ui, sans-serif; }
+.search-note { margin: 0; padding: 0.55rem 1.1rem; border-top: 1px solid var(--rule); color: var(--muted); font: 0.78rem/1.4 var(--sans); }
 @media (max-width: 600px) {
-  .search-open kbd { display: none; }
+  .search-open kbd, .search-open .search-label { display: none; }
+  .search-open { padding: 0.4em; }
+  /* Phones: name and search on the first row, the sections on the second. */
+  .site-header { flex-wrap: wrap; gap: var(--space-2) var(--space-3); padding-top: var(--space-3); padding-bottom: 0; }
+  .site-header nav { display: contents; }
+  .site-title { flex: 1; }
+  .site-header::after { content: ""; flex-basis: 100%; order: 2; }
+  .site-header nav a { order: 3; padding-bottom: var(--space-2); }
   .search-dialog { margin-top: 1rem; max-height: calc(100% - 2rem); }
 }
 @media (prefers-reduced-motion: reduce) { .search-dialog[open] { animation: none; } }
 
 /* Comments (lib/comments.typ): giscus iframe below backlinks */
-.comments { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
-.comments h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-top: 0; }
-@media (prefers-color-scheme: dark) { .draft-badge, .draft-banner { color: #f0a060; } }
+.comments { margin-top: var(--space-6); padding-top: var(--space-2); border-top: 2px solid var(--fg); }
+.comments h2 { margin-bottom: var(--space-3); }
+/* giscus styles its own frame, but set the basics too so it never shows the
+   browser's default bordered 300×150 box while loading. */
+.comments iframe { display: block; width: 100%; min-height: 150px; border: 0; background: transparent; color-scheme: normal; }
+
+/* CV (content/pages/cv.typ): both languages on the page; the EN/FR switch in
+   the meta line under the title shows one. */
+/* A segmented control: the chosen language is filled. */
+.lang-switch { display: inline-flex; padding: 2px; border: 1px solid var(--rule); border-radius: 999px; }
+.lang-switch input { position: absolute; opacity: 0; pointer-events: none; }
+.lang-switch label { font: 700 var(--step--2)/1 var(--sans); letter-spacing: 0.08em; padding: 0.35em 0.65em; border-radius: 999px; cursor: pointer; color: var(--muted); transition: color 120ms, background-color 160ms; }
+.lang-switch label:hover { color: var(--fg); }
+.lang-switch input:checked + label { color: var(--bg); background: var(--fg); }
+.lang-switch input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 1px; }
+.cv[lang="fr"], .cv-pdf[lang="fr"], body:has(#cv-fr:checked) :is(.cv, .cv-pdf)[lang="en"] { display: none; }
+body:has(#cv-fr:checked) .cv[lang="fr"] { display: block; }
+body:has(#cv-fr:checked) .cv-pdf[lang="fr"] { display: inline-flex; }
+.cv-photo { float: right; width: 84px; height: 112px; object-fit: cover; border-radius: var(--radius); margin: 0 0 var(--space-3) var(--space-4); }
+/* Wide screens: the photo hangs in the margin, which is only as wide as the
+   photo, so the column and the photo are centred together (see sidenotes). */
+@media (min-width: 1100px) {
+  body:has(main .cv-photo) { --sn-w: 120px; }
+  .cv-photo { width: var(--sn-w); height: 160px; margin: 0 calc(-1 * (var(--sn-w) + var(--sn-gap))) 0 0; }
+}
+.cv-contact { color: var(--muted); font: var(--step--1)/1.6 var(--sans); }
+/* flow-root: on phones the rule stops short of the floated photo. */
+.cv > h2 { display: flow-root; margin: var(--space-5) 0 var(--space-3); padding-top: var(--space-2); border-top: 2px solid var(--fg); }
+.cv > h2:first-of-type { margin-top: 0; }
+.cv-list { list-style: none; padding: 0; margin: 0; }
+.cv-entry { display: grid; grid-template-columns: 8.5rem 1fr; gap: 0 var(--space-3); margin: 0 0 var(--space-4); }
+.cv-when { color: var(--muted); font: var(--step--1)/1.5 var(--sans); padding-top: 0.2em; text-wrap: balance; }
+.cv-what p { margin: 0.1rem 0 0; }
+.cv-title { display: flex; justify-content: space-between; align-items: baseline; gap: 0.25rem 1rem; flex-wrap: wrap; font-family: var(--sans); }
+.cv-where { color: var(--muted); font-size: var(--step--1); font-style: italic; }
+@media (max-width: 600px) {
+  .cv-entry { grid-template-columns: 1fr; }
+  .cv-photo { width: 72px; height: 96px; }
+}
+@media print {
+  .site-header, .site-footer, .page-actions, .crumbs { display: none; }
+}
+
+/* Blogroll (lib/indexes.typ): one line per post, short date in a column. */
+.list.feed li { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: var(--space-3); margin-bottom: var(--space-2); align-items: baseline; }
+.list.feed time, .list.feed a.quiet { margin: 0; font-size: var(--step--1); color: var(--muted); }
+.feed-source { color: var(--muted); font-size: var(--step--1); margin-left: 0.5em; white-space: nowrap; }
+.feed-source::before { content: "· "; }
+
+/* Scroll mark (assets/mark.js): the logo runs round the edge of the window as
+   the page scrolls and leaves a hairline behind it. --u is the logo's unit
+   (a bar is u long), --inset its distance from the edge. */
+.scroll-mark {
+  --u: 10px; --inset: 7px; --corner: 16px;
+  position: fixed; inset: 0; width: 100%; height: 100%; z-index: 30;
+  pointer-events: none; overflow: visible;
+  /* Hidden while the header logo is in sight (mark.js adds .shown). */
+  opacity: 0; transition: opacity 300ms var(--ease);
+}
+.scroll-mark.shown { opacity: 1; }
+.scroll-mark path { fill: none; }
+.scroll-mark .mark, .scroll-mark .halo { stroke: var(--fg); stroke-width: calc(0.4 * var(--u)); stroke-linecap: round; }
+.scroll-mark .halo { stroke: var(--bg); stroke-width: calc(0.4 * var(--u) + 4px); }
+.scroll-mark .trail { stroke: var(--accent); stroke-width: 1.5px; opacity: 0.55; }
+@media (max-width: 600px) { .lede { font-size: 1.05rem; } }
+@media (max-width: 600px) { .scroll-mark { --u: 8px; --inset: 5px; --corner: 14px; } }
+html.editing .scroll-mark { display: none; }
+@media print, (prefers-reduced-motion: reduce) { .scroll-mark { display: none; } }

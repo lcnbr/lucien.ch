@@ -29,29 +29,78 @@
   if m.summary != none { html.p(class: "summary", m.summary) }
 })
 
-#let home() = context shell(kind: "home", {
-  html.p(class: "lede", site.description)
-  html.h2("Recent posts")
+// A labelled section with an optional "see all" link: the same head is used
+// for every list on the home page, backlinks, comments and the blogroll.
+#let section-head(title, href: none, more: none) = html.div(class: "section-head", {
+  html.h2(title)
+  if href != none { html.a(href: href, more) }
+})
+
+#let home() = context shell(kind: "home", path: "/", {
+  // The site description, set large, is the home page's heading.
+  html.h1(class: "lede", site.description)
+  section-head("Recent posts", href: "/blog/", more: "All posts →")
   html.ul(class: "list", posts().slice(0, calc.min(5, posts().len())).map(post-item).join())
-  html.h2("Recently tended in the garden")
+  section-head("Recently tended in the garden", href: "/garden/", more: "The garden →")
   html.ul(class: "list", notes().slice(0, calc.min(5, notes().len())).map(note-item).join())
 })
 
-#let blog-index() = context shell(title: "Blog", heading: [Blog], kind: "index", {
+#let blog-index() = context shell(title: "Blog", heading: [Blog], kind: "index", path: "/blog/", {
+  html.p(class: "lede", [Longer pieces, newest first.])
   html.ul(class: "list", posts().map(post-item).join())
 })
 
-#let garden-index() = context shell(title: "Garden", heading: [Garden], kind: "index", {
-  html.p[Evergreen notes, linked to each other. Seedlings are rough, budding notes are taking shape, evergreen notes are stable.]
+#let garden-index() = context shell(title: "Garden", heading: [Garden], kind: "index", path: "/garden/", {
+  html.p(class: "lede", [Evergreen notes, linked to each other. Seedlings are rough, budding notes are taking shape, evergreen notes are stable.])
   html.elem("div", attrs: (class: "garden-graph"))
   html.ul(class: "list", notes().map(note-item).join())
 })
 
 #let all-tags() = metas().map(m => m.at("tags", default: ())).flatten().dedup().sorted()
 
-#let tag-page(tag) = context shell(title: "#" + tag, heading: [Tagged #raw("#" + tag)], kind: "index", {
+#let tag-page(tag) = context shell(title: "#" + tag, heading: [Tagged #raw("#" + tag)], kind: "index", path: "/tags/" + tag + "/", {
+  html.p(class: "lede", [Posts and notes tagged #raw("#" + tag).])
   let ms = metas().filter(m => tag in m.at("tags", default: ()))
   html.ul(class: "list", ms.map(m => if m.kind == "post" { post-item(m) } else if m.kind == "note" { note-item(m) } else { html.li(link(label(m.slug), m.title)) }).join())
+})
+
+// Blogroll: the newest posts of the blogs in blogroll.txt, fetched at build
+// time by scripts/blogroll.py into build/blogroll.json.
+// Blogroll: the newest posts of the blogs in blogroll.txt, fetched at build
+// time by scripts/blogroll.py into build/blogroll.json. One line per post:
+// short date, title, blog; grouped by month.
+#let blogroll-page(data) = shell(title: "Blogroll", heading: [Blogroll], description: "Recent posts from blogs I read.", kind: "index", path: "/blogroll/",
+  meta: if data.fetched != none [Updated daily · last fetched #fmt-date(parse-date(data.fetched))] else [Updated daily],
+{
+  html.p(class: "lede", [Recent posts from blogs I read, newest first.])
+  if data.posts.len() == 0 {
+    html.p(class: "meta", [No posts fetched in this build.])
+  } else {
+    let months = ()
+    for p in data.posts {
+      let m = parse-date(p.date).display("[month repr:long] [year]")
+      if months.len() == 0 or months.last().at(0) != m { months.push((m, ())) }
+      months.last().at(1).push(p)
+    }
+    for (m, ps) in months {
+      section-head(m)
+      html.ul(class: "list feed", ps.map(p => html.li({
+        let d = parse-date(p.date)
+        html.time(datetime: d, d.display("[day padding:none] [month repr:short]"))
+        html.span({
+          html.a(href: p.url, p.title)
+          html.span(class: "feed-source", p.blog)
+        })
+      })).join())
+    }
+  }
+  if data.blogs.len() > 0 {
+    section-head("Blogs")
+    html.ul(class: "list feed", data.blogs.map(b => html.li({
+      html.a(class: "quiet", href: b.feed, "RSS")
+      html.a(href: b.url, b.title)
+    })).join())
+  }
 })
 
 // --- feeds and data ---------------------------------------------------------

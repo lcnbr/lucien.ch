@@ -200,7 +200,9 @@ async function startCompiler() {
     },
   });
   step("Loading fonts");
-  const fonts = ["NewCM10-Regular.otf", "NewCM10-Italic.otf", "NewCM10-Bold.otf", "NewCM10-BoldItalic.otf", "NewCMMath-Regular.otf", "DejaVuSansMono.ttf"];
+  // Typst's defaults, then the site's fonts from fonts/ (lib/base.typ uses them for diagrams).
+  const fonts = ["NewCM10-Regular.otf", "NewCM10-Italic.otf", "NewCM10-Bold.otf", "NewCM10-BoldItalic.otf", "NewCMMath-Regular.otf", "DejaVuSansMono.ttf",
+    "Literata-Regular.ttf", "Literata-Italic.ttf", "Literata-Bold.ttf", "Literata-BoldItalic.ttf", "STIXTwoMath-Regular.otf"];
   await compiler.addFonts(...fonts.map(f => fetch(new URL("fonts/" + f, VENDOR)).then(r => r.arrayBuffer()).then(b => new Uint8Array(b))));
   for (const path of files.keys()) if (files.get(path).loaded) await pushToCompiler(path);
   step("");
@@ -231,8 +233,35 @@ function labelsDefined(text) {
   return out;
 }
 function slugOf(path) {
-  const m = path.match(/^content\/(?:posts\/\d{4}-\d{2}-\d{2}-|garden\/|pages\/)(.+)\.typ$/);
-  return m && m[1];
+  return place(path)?.slug ?? null;
+}
+// Where labels defined on other pages live: slug -> page URL, label ->
+// page URL#label. Used to point preview links at the real pages.
+function externalTargets(path) {
+  const out = new Map();
+  for (const [p, src] of Object.entries(otherPages)) {
+    if (p === path) continue;
+    const slug = slugOf(p), url = urlFor(p);
+    if (slug) out.set(slug, url);
+    for (const l of labelsDefined(src).keys()) if (!out.has(l)) out.set(l, url + "#" + encodeURIComponent(l));
+  }
+  return out;
+}
+// In the single-page preview, links to other pages (and to labels on them)
+// come out as "#label", pointing at a hidden stand-in. Send them to the page.
+// A target on no published page (a draft) becomes plain words, as on the site.
+function fixLinks(html, path, text) {
+  const own = labelsDefined(text), ext = externalTargets(path);
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  let changed = false;
+  for (const a of doc.querySelectorAll('a[href^="#"]')) {
+    const l = decodeURIComponent(a.getAttribute("href").slice(1));
+    if (!l || own.has(l) || doc.getElementById(l) && !doc.getElementById(l).closest("[hidden]")) continue;
+    if (ext.has(l)) a.setAttribute("href", ext.get(l));
+    else { const s = doc.createElement("span"); s.className = "draft-link"; s.append(...a.childNodes); a.replaceWith(s); }
+    changed = true;
+  }
+  return changed ? "<!DOCTYPE html>\n" + doc.documentElement.outerHTML : html;
 }
 function withLabelStubs(path, text) {
   const own = labelsDefined(text);
@@ -282,7 +311,8 @@ async function compile() {
   if (seq !== compileSeq) return;
   showDiagnostics(result.diagnostics);
   if (!compiled) step("");
-  showPreview(fixMathML(result.output)); compiled = true;
+  const mainText = main === current ? view.state.doc.toString() : (store.getDraft(main) ?? files.get(main).text);
+  showPreview(fixLinks(fixMathML(result.output), main, mainText)); compiled = true;
   if (!isDirty()) setStatus(`Compiled in ${Math.round(performance.now() - t0)} ms`);
 }
 
@@ -494,12 +524,23 @@ function siteHref(p) {
   return u.href;
 }
 
-function urlFor(path) {
+// Slug and URL of a content file, as the site build names them.
+// Research: index.typ is /research/, a thesis is a folder whose index.typ is
+// /research/<thesis>/ (slug "<thesis>"), and its chapter <stem>.typ is
+// /research/<thesis>/<stem>/ (slug "<thesis>-<stem>").
+function place(path) {
   let m;
-  if ((m = path.match(/^content\/posts\/\d{4}-\d{2}-\d{2}-(.+)\.typ$/))) return `/blog/${m[1]}/`;
-  if ((m = path.match(/^content\/garden\/(.+)\.typ$/))) return `/garden/${m[1]}/`;
-  if ((m = path.match(/^content\/pages\/(.+)\.typ$/))) return `/${m[1]}/`;
-  return "/";
+  if ((m = path.match(/^content\/posts\/\d{4}-\d{2}-\d{2}-([^/]+)\.typ$/))) return { slug: m[1], url: `/blog/${m[1]}/` };
+  if ((m = path.match(/^content\/garden\/([^/]+)\.typ$/))) return { slug: m[1], url: `/garden/${m[1]}/` };
+  if ((m = path.match(/^content\/pages\/([^/]+)\.typ$/))) return { slug: m[1], url: `/${m[1]}/` };
+  if (path === "content/research/index.typ") return { slug: "research", url: "/research/" };
+  if ((m = path.match(/^content\/research\/([^/]+)\.typ$/))) return { slug: m[1], url: `/research/${m[1]}/` };
+  if ((m = path.match(/^content\/research\/([^/]+)\/index\.typ$/))) return { slug: m[1], url: `/research/${m[1]}/` };
+  if ((m = path.match(/^content\/research\/([^/]+)\/([^/]+)\.typ$/))) return { slug: `${m[1]}-${m[2]}`, url: `/research/${m[1]}/${m[2]}/` };
+  return null;
+}
+function urlFor(path) {
+  return place(path)?.url ?? "/";
 }
 
 const isPage = p => p.startsWith("content/") && p.endsWith(".typ");
