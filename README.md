@@ -5,16 +5,24 @@ and built into a static site with Typst's HTML bundle export.
 
 ## Build
 
-Requires Typst (version in [`typst-version`](typst-version)) and Python 3.
+Requires Typst (version in [`typst-version`](typst-version)) and Rust (cargo);
+with Nix, `nix develop` gives both, and Node for search.
 
 ```sh
-python3 scripts/build.py            # build into dist/
-python3 scripts/build.py --watch    # live-reloading preview on http://127.0.0.1:3000
-python3 scripts/build.py --search   # also build the Pagefind search index (needs npx)
+cargo site build            # build into dist/
+cargo site build --watch    # live-reloading preview on http://127.0.0.1:3000
+cargo site build --search   # also build the Pagefind search index (needs npx)
+cargo site serve            # serve dist/ on http://127.0.0.1:8000
+cargo site help             # every command and option
 ```
 
-`scripts/build.py` writes `build/manifest.json` (every content file with its
-slug, output path and git dates), runs
+`cargo site serve --host 0.0.0.0` also lets other devices on the network (a
+phone) reach it, and `--dir DIR` serves another build than `dist/`.
+
+`cargo site` is the build tool in [`tools/site/`](tools/site) (an alias in
+`.cargo/config.toml`; the first run compiles it). `cargo site build` writes
+`build/manifest.json` (every content file with its slug, output path and git
+dates), fetches the blogroll, runs
 `typst compile --features html,bundle --format bundle site.typ dist`, then
 applies a small MathML fix-up (see below).
 
@@ -58,7 +66,7 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
 
 `/cv/` shows the CV in English and French with a switch (`/cv/#fr` opens
 the French one). The text of both languages lives in `lib/cv.typ`; the page
-is `content/pages/cv.typ`, and `scripts/build.py` also compiles
+is `content/pages/cv.typ`, and `cargo site build` also compiles
 `cv/cv-pdf.typ` into `/cv/lucien-huber-cv-en.pdf` and `-fr.pdf`. Phone,
 address and birthday are not in the repository, which is public: pass them
 as `--input`s to put them in a PDF you build yourself (see the top of
@@ -80,7 +88,9 @@ as `--input`s to put them in a PDF you build yourself (see the top of
   garden note inline) and `mark.js` (the scroll mark: the logo from the CV runs
   round the edge of the window as the page scrolls, leaving a line behind it).
   None has dependencies.
-- `scripts/mathml_fix.py` — Chromium sizes stretchy delimiters by their widest
+- `tools/site/` — the build tool (Rust): manifest, blogroll, Typst, CV PDFs,
+  MathML fix-up, the editor, the drafts gate and a local server.
+- `tools/site/src/mathml.rs` — Chromium sizes stretchy delimiters by their widest
   variant, which makes `f(x)` look like `f ( x )` with some math fonts.
   The fix marks fences around short content as `stretchy="false"`.
 - `.github/workflows/build.yml` — builds on every push and PR, uploads the site
@@ -95,11 +105,12 @@ Typst's HTML and bundle export are experimental, so the Typst version is pinned.
 newest first (idea from [matklad](https://matklad.github.io/links.html)). Add one
 RSS or Atom feed URL per line; anything after the URL is a comment.
 
-`scripts/blogroll.py` fetches the feeds at build time (three newest posts per
-blog) into `build/blogroll.json`, which `site.typ` reads. A feed that fails is
-skipped with a warning, never fatal. CI rebuilds main every day at 05:17 UTC so
-the page stays fresh. `python3 scripts/build.py --offline` skips the fetch and
-reuses the last one.
+The build fetches the feeds (three newest posts per blog) into
+`build/blogroll.json`, which `site.typ` reads. A feed that fails is skipped with
+a warning, never fatal, and links that aren't `http(s)` are dropped. CI rebuilds
+main every day at 05:17 UTC so the page stays fresh. `cargo site build --offline`
+skips the fetch and reuses the last one; `cargo site blogroll FEED.xml` shows
+what a feed file would give.
 
 ## Drafts
 
@@ -135,12 +146,13 @@ One-time setup (free Cloudflare Zero Trust plan):
    [Actions variables](https://github.com/lcnbr/lucien.ch/settings/variables/actions)
    override them. The AUD tag is the `kid=` value in the Access login URL.
 
-`scripts/build.py` finds drafts by reading the template call before compiling;
+The build finds drafts by reading the template call before compiling;
 the templates check again during the compile and stop the public build if a
 draft got through, so a miss fails the build instead of publishing.
 
-Locally: `python3 scripts/build.py --drafts` builds the drafts site into
-`dist/` (add `--out dist-drafts` to keep both).
+Locally: `cargo site build --drafts` builds the drafts site into
+`dist/` (add `--out dist-drafts` to keep both;
+`cargo site serve --dir dist-drafts` serves it).
 
 The source files themselves are as visible as the repository: while it is
 public, anyone can read a draft's `.typ` file on GitHub.
@@ -157,7 +169,7 @@ The site uses two faces and one math font:
 `assets/fonts/` holds them as WOFF2 for the browser. Literata is subset to
 Latin and Greek. `fonts/` holds Literata and STIX Two Math as TTF/OTF for
 Typst, which draws diagrams, plots and `#svg-math` as SVG with the same fonts
-(see `shell` in `lib/base.typ`). `build.py` passes it with `--font-path`, and
+(see `shell` in `lib/base.typ`). The build passes it with `--font-path`, and
 the editor loads it too. Literata 3.103 and STIX Two 2.13 come from nixpkgs,
 Atkinson Hyperlegible from `cv/fonts/`. All three are under the SIL Open Font
 License 1.1.
@@ -179,9 +191,9 @@ License 1.1.
 - In the preview, garden links point to `#` and backlinks/indexes are not
   built (only the open file is compiled).
 
-Locally: `python3 scripts/build.py --editor && python3 scripts/serve.py`
-(with Nix, `nix develop` first gives Typst, Python and Node),
-then open http://localhost:8000/edit/. `serve.py` sends the
+Locally: `cargo site build --editor && cargo site serve`
+(with Nix, `nix develop` first gives Typst, Rust and Node),
+then open http://127.0.0.1:8000/edit/. `cargo site serve` sends the
 cross-origin-isolation headers that let the compiler run in a worker. On
 Cloudflare, `/edit/` always gets them (`dist/_headers`); other pages get them
 only while the editor is docked (an `edit=1` cookie read by

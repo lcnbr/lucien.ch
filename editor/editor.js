@@ -94,7 +94,7 @@ async function loadTree() {
 }
 
 // Fallback when GitHub is unreachable (offline, or a sandboxed preview):
-// the sources as of the last build, written by build.py. Read-only.
+// the sources as of the last build, written by `cargo site build --editor`. Read-only.
 let snapshot = null;
 async function loadSnapshot() {
   const r = await fetch(new URL("./snapshot.json", import.meta.url));

@@ -8,10 +8,10 @@
       systems = [ "aarch64-darwin" "x86_64-darwin" "x86_64-linux" "aarch64-linux" ];
       forAll = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
     in {
-      # `nix develop`, then `python3 scripts/build.py --editor --search` and
-      # `python3 scripts/serve.py`. The repo pins Typst in ./typst-version.
+      # `nix develop`, then `cargo site build --editor --search` and
+      # `cargo site serve`. The repo pins Typst in ./typst-version.
       devShells = forAll (pkgs: {
-        default = pkgs.mkShell { packages = [ pkgs.typst pkgs.python3 pkgs.nodejs ]; };
+        default = pkgs.mkShell { packages = [ pkgs.typst pkgs.cargo pkgs.rustc pkgs.nodejs ]; };
       });
     };
 }

@@ -144,7 +144,7 @@ th { font: 700 var(--step--1)/1.4 var(--sans); text-align: left; border-bottom-c
 /* Badges: note status and drafts share one shape. */
 .status, .draft-badge { font: 700 var(--step--2)/1 var(--sans); text-transform: uppercase; letter-spacing: 0.08em; padding: 0.3em 0.5em; border-radius: 4px; border: 1px solid currentColor; vertical-align: 0.2em; }
 .status.seedling { color: var(--seedling); } .status.budding { color: var(--budding); } .status.evergreen { color: var(--evergreen); }
-/* Drafts: only on the private drafts site (scripts/build.py --drafts). */
+/* Drafts: only on the private drafts site (cargo site build --drafts). */
 .draft-badge { color: var(--draft); border-style: dashed; }
 .draft-banner { color: var(--draft); border: 1px dashed currentColor; border-radius: var(--radius); padding: 0.4em 0.7em; font: var(--step--1)/1.5 var(--sans); }
 

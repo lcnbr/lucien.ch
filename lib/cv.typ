@@ -1,7 +1,7 @@
 // Curriculum vitae: the content in English and French, and the PDF layout.
 //
 // The web page (content/pages/cv.typ) and the PDFs (cv/cv-pdf.typ, built by
-// scripts/build.py into /cv/lucien-huber-cv-en.pdf and -fr.pdf) both read
+// `cargo site build` into /cv/lucien-huber-cv-en.pdf and -fr.pdf) both read
 // `cv-data(lang)`, so a change here shows up in all three.
 
 // Personal details. The repository is public, and so is the editor's copy of

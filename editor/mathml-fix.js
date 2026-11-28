@@ -1,4 +1,4 @@
-// JavaScript twin of scripts/mathml_fix.py, applied to the editor preview so it
+// JavaScript twin of tools/site/src/mathml.rs, applied to the editor preview so it
 // matches the built site. See that file for why Chromium needs it.
 const TAG = /<(\/?)([a-zA-Z0-9]+)((?:\s[^>]*)?)>/g;
 const TALL_TAGS = new Set(["mfrac", "mtable", "munderover", "munder", "msqrt", "mroot", "mpadded"]);

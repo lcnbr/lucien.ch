@@ -7,16 +7,16 @@
 // labels do not exist there, so link helpers degrade to plain URLs.
 #let preview = sys.inputs.at("preview", default: "false") == "true"
 
-// True for the private drafts build (scripts/build.py --drafts). The public
+// True for the private drafts build (cargo site build --drafts). The public
 // build leaves drafts out entirely; see `check-draft`.
 #let drafts = sys.inputs.at("drafts", default: "false") == "true"
 
-// Called by every template with its `draft:` argument. build.py decides which
+// Called by every template with its `draft:` argument. The build decides which
 // files are drafts before compiling; if a draft still reaches the public
 // build, stop it here rather than publish it.
 #let check-draft(draft) = {
   if draft and not drafts and not preview {
-    panic("a page marked draft: true reached the public build; scripts/build.py did not detect it")
+    panic("a page marked draft: true reached the public build; the build tool (tools/site) did not detect it")
   }
 }
 

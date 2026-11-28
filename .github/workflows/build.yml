@@ -22,6 +22,9 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # Through the environment, not pasted into scripts: a branch name could
+      # hold shell syntax.
+      DEPLOY_BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,12 +48,25 @@ jobs:
         with:
           node-version: 22
 
+      # The build tool (tools/site), compiled once and cached.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools/site
+      - name: Build the build tool
+        run: cargo build --release --manifest-path tools/site/Cargo.toml
+
       # Tinymist (the Typst language server) for the editor, built for the
       # browser. Building takes ~25 minutes, so the result is cached per
-      # version; bump TINYMIST_VERSION in scripts/build.py to rebuild.
+      # version; bump TINYMIST_VERSION in tools/site/src/editor.rs to rebuild.
       - name: Tinymist version
         id: tinymist
-        run: echo "version=$(sed -n 's/^TINYMIST_VERSION = \"\(.*\)\"/\1/p' scripts/build.py)" >> "$GITHUB_OUTPUT"
+        run: |
+          version=$(sed -n 's/^pub const TINYMIST_VERSION: &str = "\(.*\)";$/\1/p' tools/site/src/editor.rs)
+          if [ -z "$version" ]; then
+            echo "::error file=tools/site/src/editor.rs::no TINYMIST_VERSION line found"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Cache tinymist
         id: tinymist-cache
         uses: actions/cache@v4
@@ -76,7 +92,7 @@ jobs:
       - name: Build site
         env:
           TINYMIST_PKG: tinymist-web
-        run: python3 scripts/build.py --search --editor
+        run: cargo site build --search --editor
 
       - uses: actions/upload-artifact@v4
         with:
@@ -94,7 +110,7 @@ jobs:
         run: >
           npx --yes wrangler@4 pages deploy dist
           --project-name lucien-ch
-          --branch ${{ github.head_ref || github.ref_name }}
+          --branch "$DEPLOY_BRANCH"
 
       # Private drafts site: everything above plus pages marked `draft: true`,
       # behind Cloudflare Access with GitHub login (README, "Drafts"). Its own
@@ -105,9 +121,10 @@ jobs:
       - name: Build drafts site
         env:
           BLOGROLL_OFFLINE: "1" # reuse the feeds fetched for the public build
+          TINYMIST_PKG: tinymist-web
           DRAFTS_ACCESS_TEAM: ${{ vars.DRAFTS_ACCESS_TEAM || 'lcnbr' }}
           DRAFTS_ACCESS_AUD: ${{ vars.DRAFTS_ACCESS_AUD || 'b6de2ac52ff95341df6fa47d2d5fc0d6da17d0a9a4d03871fea2de2de3516283' }}
-        run: python3 scripts/build.py --search --editor --drafts --out dist-drafts
+        run: cargo site build --search --editor --drafts --out dist-drafts
       - name: Create Cloudflare Pages project for drafts
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         run: npx --yes wrangler@4 pages project create lucien-ch-drafts --production-branch main || echo "Project already exists (or see the deploy step for errors)."
@@ -116,4 +133,4 @@ jobs:
         run: >
           npx --yes wrangler@4 pages deploy dist-drafts
           --project-name lucien-ch-drafts
-          --branch ${{ github.head_ref || github.ref_name }}
+          --branch "$DEPLOY_BRANCH"
