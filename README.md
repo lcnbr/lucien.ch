@@ -59,8 +59,10 @@ Inline $a^2 + b^2 = c^2$, display math, and a link to #n(<berry-phase>)[a note].
 `/cv/` shows the CV in English and French with a switch (`/cv/#fr` opens
 the French one). The text of both languages lives in `lib/cv.typ`; the page
 is `content/pages/cv.typ`, and `scripts/build.py` also compiles
-`cv/cv-pdf.typ` into `/cv/lucien-huber-cv-en.pdf` and `-fr.pdf`. Which
-personal details are shown is set by `public` at the top of `lib/cv.typ`.
+`cv/cv-pdf.typ` into `/cv/lucien-huber-cv-en.pdf` and `-fr.pdf`. Phone,
+address and birthday are not in the repository, which is public: pass them
+as `--input`s to put them in a PDF you build yourself (see the top of
+`lib/cv.typ`). The site only shows the name, email and photo.
 
 ## How it fits together
 

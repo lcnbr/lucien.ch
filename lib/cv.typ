@@ -4,17 +4,30 @@
 // scripts/build.py into /cv/lucien-huber-cv-en.pdf and -fr.pdf) both read
 // `cv-data(lang)`, so a change here shows up in all three.
 
-// Personal details. Only what is listed in `public` is shown on the site
-// and in the PDFs.
+// Personal details. The repository is public, and so is the editor's copy of
+// these sources, so phone, address and birthday are not written here: they
+// only exist in a PDF you build yourself, passed as inputs, e.g.
+//   typst compile --root . --font-path cv/fonts --input lang=fr \
+//     --input phone="+41 …" --input address="…" --input birthday=YYYY-MM-DD \
+//     cv/cv-pdf.typ cv-fr.pdf
+// The site build passes none of them, so the page and the PDFs on the site
+// show only what is in `public`.
+#let private-input(key) = sys.inputs.at(key, default: none)
 #let contact = (
   name: "Lucien Huber",
   email: "mail@lucien.ch",
-  phone: none,
-  address: none,
-  birthday: none,
+  phone: private-input("phone"),
+  address: private-input("address"),
+  birthday: {
+    let b = private-input("birthday")
+    if b != none {
+      let (y, m, d) = b.split("-").map(int)
+      datetime(year: y, month: m, day: d)
+    }
+  },
   photo: "/assets/cv/headshot.jpg",
 )
-#let public = ("email", "photo")
+#let public = ("email", "photo") + ("phone", "address", "birthday").filter(k => contact.at(k) != none)
 
 #let d(y, m, day: 1) = datetime(year: y, month: m, day: day)
 
