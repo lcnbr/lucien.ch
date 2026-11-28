@@ -1,6 +1,6 @@
 // Bundle entry point: emits every page of lucien.ch.
 //
-//   python3 scripts/build.py          (writes build/manifest.json, then compiles)
+//   cargo site build                  (writes build/manifest.json, then compiles)
 //   typst compile --features html,bundle --format bundle site.typ dist
 #import "lib/state.typ": current
 #import "lib/indexes.typ": home, blog-index, garden-index, tag-page, all-tags, blogroll-page, rss, graph-data

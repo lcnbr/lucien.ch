@@ -1,6 +1,6 @@
 // Site search as an overlay on every page: the header's Search button,
 // Ctrl/⌘ K or "/" opens it, results appear as you type. Uses the Pagefind
-// index built by `scripts/build.py --search`. No dependencies.
+// index built by `cargo site build --search`. No dependencies.
 (function () {
   const ROOT = new URL("../", document.currentScript ? document.currentScript.src : location.origin + "/assets/");
   const MAX = 8;

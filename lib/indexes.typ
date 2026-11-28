@@ -64,9 +64,7 @@
 })
 
 // Blogroll: the newest posts of the blogs in blogroll.txt, fetched at build
-// time by scripts/blogroll.py into build/blogroll.json.
-// Blogroll: the newest posts of the blogs in blogroll.txt, fetched at build
-// time by scripts/blogroll.py into build/blogroll.json. One line per post:
+// time (tools/site/src/blogroll.rs) into build/blogroll.json. One line per post:
 // short date, title, blog; grouped by month.
 #let blogroll-page(data) = shell(title: "Blogroll", heading: [Blogroll], description: "Recent posts from blogs I read.", kind: "index", path: "/blogroll/",
   meta: if data.fetched != none [Updated daily · last fetched #fmt-date(parse-date(data.fetched))] else [Updated daily],

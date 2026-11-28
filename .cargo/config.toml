@@ -1,0 +1,3 @@
+# `cargo site build`, `cargo site serve`, ...: the build tool in tools/site/.
+[alias]
+site = "run --quiet --release --manifest-path tools/site/Cargo.toml --"

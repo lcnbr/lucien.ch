@@ -10,11 +10,11 @@ npx esbuild codemirror-entry.js --bundle --format=esm --minify --outfile=codemir
 ```
 
 The Typst compiler (typst-wasm), its fonts, nanotar and the Typst packages the
-site uses are not committed: `scripts/build.py --editor` downloads them from npm
+site uses are not committed: `cargo site build --editor` downloads them from npm
 and copies them into `dist/edit/vendor/` at build time.
 
 Tinymist (the Typst language server behind completion, hover docs and go to
 definition) is built for the browser in CI (`.github/workflows/build.yml`,
-cached per version) and passed to `build.py` as `TINYMIST_PKG`. Locally, point
+cached per version) and passed to the build as `TINYMIST_PKG`. Locally, point
 `TINYMIST_PKG` at a `wasm-pack` build of `crates/tinymist`; without it the
 editor works as before.

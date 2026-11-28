@@ -1,0 +1,22 @@
+[package]
+name = "site"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+publish = false
+description = "Build tool for lucien.ch: manifest, blogroll, Typst, MathML fix-up, editor, local server"
+
+[dependencies]
+anyhow = "1"
+base64 = "0.22"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+flate2 = "1"
+html-escape = "0.2"
+regex = "1"
+roxmltree = "0.20"
+serde = "1"
+serde_json = { version = "1", features = ["preserve_order"] }
+tar = { version = "0.4", default-features = false }
+tiny_http = "0.12"
+ureq = "2"
+url = "2"

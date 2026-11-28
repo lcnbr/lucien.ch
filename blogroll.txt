@@ -1,4 +1,4 @@
-# Blogroll: feeds listed on /blogroll/, fetched at build time (scripts/blogroll.py).
+# Blogroll: feeds listed on /blogroll/, fetched at build time (tools/site/src/blogroll.rs).
 # One RSS or Atom feed URL per line; text after the URL and lines starting
 # with # are comments. A feed that fails to load is skipped, not fatal.
 #

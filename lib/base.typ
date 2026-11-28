@@ -81,7 +81,7 @@
   // list; the entries are dropped and the empty list is hidden by CSS.
   show footnote.entry: it => if target() == "html" { none } else { it }
   // Diagrams, plots and #svg-math are drawn by Typst as SVG, with its own
-  // fonts: use the page's (fonts/; build.py passes --font-path).
+  // fonts: use the page's (fonts/; the build passes --font-path).
   set text(font: ("Literata", "New Computer Modern"))
   show math.equation: set text(font: ("STIX Two Math", "New Computer Modern Math"))
   show footnote: it => {
