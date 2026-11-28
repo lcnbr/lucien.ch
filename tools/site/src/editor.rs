@@ -3,20 +3,27 @@
 
 use std::fs;
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::process::Command;
+use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
 use base64::Engine;
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use serde_json::{json, Map, Value};
+use sha2::{Digest, Sha512};
 
 use crate::{manifest, util};
 
 /// Versions of the in-browser compiler; typst-wasm 1.0.0 embeds Typst 0.15.
-const TYPST_WASM: &str = "1.0.0";
-const TYPST_WASM_FONTS: &str = "1.0.0";
-const NANOTAR: &str = "0.2.1";
+/// With each, the sha512 `integrity` the npm registry lists for its tarball
+/// (registry.npmjs.org/<name>/<version>, `dist.integrity`), checked as npm does.
+const TYPST_WASM: (&str, &str) =
+    ("1.0.0", "sha512-x4YzWaq32NKW3Eall6g08DlDM/PsjbfYeKovc3SY/1cHdkwq42jT7IVN786uitCAb0vRZn7p6fJ03Gbq3iKS+Q==");
+const TYPST_WASM_FONTS: (&str, &str) =
+    ("1.0.0", "sha512-azAPU3NjsyQWl0TVPSqgPs96Rn0DekzPEvCcnl0sKcTTf43gRvuVjkxrgIUgNI6aBUx9NSsC8bjcqzOgM9Likg==");
+const NANOTAR: (&str, &str) =
+    ("0.2.1", "sha512-MUrzzDUcIOPbv7ubhDV/L4CIfVTATd9XhDE2ixFeCrM5yp9AlzUpn91JrnN0HD6hksdxvz9IW9aKANz0Bta0GA==");
 /// Tinymist (Typst language server) for the editor; CI builds it for the
 /// browser (see .github/workflows/build.yml, which reads this line) and
 /// passes it in TINYMIST_PKG.
@@ -30,29 +37,60 @@ const EDITOR_FONTS: [&str; 6] = [
     "NewCMMath-Regular.otf",
     "DejaVuSansMono.ttf",
 ];
+const MAX_TARBALL: u64 = 100 << 20;
 
-/// Download an npm package from the registry and write the files `pick`
-/// chooses (given their path inside the package) to where it says.
-fn npm_files(name: &str, version: &str, mut pick: impl FnMut(&str) -> Option<PathBuf>) -> Result<()> {
+/// A relative path as "a/b/c", if it has only plain components: no `..`, `.`,
+/// root or drive, so joining it to a directory stays inside that directory.
+fn plain(path: &Path) -> Option<String> {
+    let parts: Option<Vec<&str>> = path
+        .components()
+        .map(|c| match c {
+            Component::Normal(s) => s.to_str(),
+            _ => None,
+        })
+        .collect();
+    parts.filter(|p| !p.is_empty()).map(|p| p.join("/"))
+}
+
+/// Download an npm package from the registry, check its sha512 and unpack it.
+fn npm_files(
+    agent: &ureq::Agent,
+    name: &str,
+    (version, integrity): (&str, &str),
+    dest: &Path,
+    pick: impl FnMut(&str) -> Option<String>,
+) -> Result<()> {
     let base = name.rsplit('/').next().unwrap();
     let url = format!("https://registry.npmjs.org/{name}/-/{base}-{version}.tgz");
-    let res = ureq::get(&url).call().with_context(|| format!("downloading {url}"))?;
-    let mut tar = tar::Archive::new(GzDecoder::new(res.into_reader()));
+    let mut data = Vec::new();
+    let res = agent.get(&url).call().with_context(|| format!("downloading {url}"))?;
+    res.into_reader().take(MAX_TARBALL + 1).read_to_end(&mut data).with_context(|| format!("downloading {url}"))?;
+    let got = format!("sha512-{}", base64::engine::general_purpose::STANDARD.encode(Sha512::digest(&data)));
+    if got != integrity {
+        bail!("{url}: integrity is {got}, expected {integrity}");
+    }
+    unpack(&data, dest, pick).with_context(|| format!("unpacking {url}"))
+}
+
+/// Write the files of an npm tarball that `pick` chooses (given their path
+/// inside the package) to the path it returns under `dest`.
+fn unpack(tgz: &[u8], dest: &Path, mut pick: impl FnMut(&str) -> Option<String>) -> Result<()> {
+    let mut tar = tar::Archive::new(GzDecoder::new(tgz));
     for entry in tar.entries()? {
         let mut entry = entry?;
         if !entry.header().entry_type().is_file() {
             continue;
         }
-        let path = entry.path()?.to_string_lossy().into_owned();
-        let Some(inner) = path.strip_prefix("package/") else { continue };
-        if inner.split('/').any(|c| c == "..") {
-            bail!("{url}: unsafe path {path}");
-        }
-        if let Some(dest) = pick(inner) {
-            fs::create_dir_all(dest.parent().unwrap())?;
+        let path = entry.path()?.into_owned();
+        let Ok(inner) = path.strip_prefix("package") else { continue };
+        let Some(inner) = plain(inner) else { bail!("unsafe path {}", path.display()) };
+        if let Some(to) = pick(&inner) {
+            let Some(to) = plain(Path::new(&to)) else { bail!("unsafe destination {to} for {inner}") };
+            let to = dest.join(to);
+            fs::create_dir_all(to.parent().unwrap())?;
             let mut data = Vec::new();
             entry.read_to_end(&mut data)?;
-            fs::write(&dest, data)?;
+            fs::write(&to, data)?;
         }
     }
     Ok(())
@@ -203,25 +241,28 @@ pub fn build(root: &Path, dist: &Path, include_drafts: bool) -> Result<()> {
         fs::write(dist.join("_routes.json"), format!("{routes}\n"))?;
     }
 
-    let tw = vendor.join("typst-wasm");
-    npm_files("typst-wasm", TYPST_WASM, |p| {
+    // Timeouts, so a stalled registry fails the build instead of hanging it.
+    let agent =
+        ureq::AgentBuilder::new().timeout_connect(Duration::from_secs(30)).timeout(Duration::from_secs(300)).build();
+    npm_files(&agent, "typst-wasm", TYPST_WASM, &vendor.join("typst-wasm"), |p| {
         let rest = p.strip_prefix("dist/")?;
-        (!rest.ends_with(".map") && !rest.ends_with(".d.ts")).then(|| tw.join(rest))
+        (!rest.ends_with(".map") && !rest.ends_with(".d.ts")).then(|| rest.into())
     })?;
     let fonts = vendor.join("fonts");
-    npm_files("@typst-wasm/fonts", TYPST_WASM_FONTS, |p| {
+    npm_files(&agent, "@typst-wasm/fonts", TYPST_WASM_FONTS, &fonts, |p| {
         let f = p.strip_prefix("dist/files/")?;
-        EDITOR_FONTS.contains(&f).then(|| fonts.join(f))
+        EDITOR_FONTS.contains(&f).then(|| f.into())
     })?;
     // The site's own fonts, so diagrams look the same in the preview.
     for f in util::files(&root.join("fonts"))? {
         fs::copy(&f, fonts.join(f.file_name().unwrap()))?;
     }
-    let nanotar = vendor.join("nanotar/index.mjs");
-    npm_files("nanotar", NANOTAR, |p| (p == "dist/index.mjs").then(|| nanotar.clone()))?;
+    npm_files(&agent, "nanotar", NANOTAR, &vendor.join("nanotar"), |p| {
+        (p == "dist/index.mjs").then(|| "index.mjs".into())
+    })?;
     for f in EDITOR_FONTS {
         if !fonts.join(f).exists() {
-            bail!("@typst-wasm/fonts {TYPST_WASM_FONTS} has no {f}");
+            bail!("@typst-wasm/fonts {} has no {f}", TYPST_WASM_FONTS.0);
         }
     }
     vendor_tinymist(&vendor.join("tinymist"))?;
@@ -247,4 +288,52 @@ pub fn build(root: &Path, dist: &Path, include_drafts: bool) -> Result<()> {
     let n = mirror_packages(&vendor.join("packages"))?;
     println!("editor: built dist/edit/ with {n} mirrored Typst packages");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A .tgz with these (name, contents) entries, names written as given.
+    fn tgz(files: &[(&str, &str)]) -> Vec<u8> {
+        let mut b = tar::Builder::new(GzEncoder::new(Vec::new(), Compression::fast()));
+        for (name, data) in files {
+            let mut h = tar::Header::new_gnu();
+            h.as_old_mut().name[..name.len()].copy_from_slice(name.as_bytes());
+            h.set_size(data.len() as u64);
+            h.set_mode(0o644);
+            h.set_entry_type(tar::EntryType::Regular);
+            h.set_cksum();
+            b.append(&h, data.as_bytes()).unwrap();
+        }
+        b.into_inner().unwrap().finish().unwrap()
+    }
+
+    #[test]
+    fn plain_paths() {
+        assert_eq!(plain(Path::new("dist//files/a.otf")).as_deref(), Some("dist/files/a.otf"));
+        assert_eq!(plain(Path::new("/etc/x")), None);
+        assert_eq!(plain(Path::new("a/../../x")), None);
+        assert_eq!(plain(Path::new("./x")), None);
+        assert_eq!(plain(Path::new("")), None);
+    }
+
+    #[test]
+    fn unpack_stays_inside() {
+        let dir = std::env::temp_dir().join(format!("site-unpack-test-{}", std::process::id()));
+        let dest = dir.join("vendor");
+        let take_dist = |p: &str| p.strip_prefix("dist/").map(String::from);
+        unpack(&tgz(&[("package/dist/a.js", "a"), ("package/README.md", "r")]), &dest, take_dist).unwrap();
+        assert_eq!(fs::read_to_string(dest.join("a.js")).unwrap(), "a");
+        assert!(!dest.join("README.md").exists());
+        // An absolute path after the prefix would make dest.join() leave dest.
+        let evil = dir.join("evil");
+        let name = format!("package/dist/{}", evil.display());
+        assert!(unpack(&tgz(&[(&name, "x")]), &dest, take_dist).is_ok());
+        assert!(!evil.exists() && dest.join(evil.strip_prefix("/").unwrap()).exists());
+        assert!(unpack(&tgz(&[("package/dist/../../x", "x")]), &dest, take_dist).is_err());
+        assert!(unpack(&tgz(&[("package/a", "x")]), &dest, |_| Some("/tmp/x".into())).is_err());
+        assert!(unpack(&tgz(&[("package/a", "x")]), &dest, |_| Some("../x".into())).is_err());
+        fs::remove_dir_all(&dir).unwrap();
+    }
 }

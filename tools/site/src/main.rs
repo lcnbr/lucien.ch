@@ -36,9 +36,13 @@ usage: cargo site <command> [options]
     --search           also build the Pagefind search index (needs npx)
     --editor           also build the /edit/ page
     --drafts           private build: include drafts, behind GitHub login
-    --out DIR          output directory (default: dist/)
+    --out DIR          output directory (default: dist/); emptied first, so it
+                       may not be the repository, a source folder or a checkout
     --offline          don't fetch the blogroll feeds (reuse the last fetch)
   serve [PORT]         serve dist/ on PORT (default 8000) with the editor's headers
+    --host ADDR        address to listen on (default 127.0.0.1; 0.0.0.0 lets
+                       other devices, such as a phone, reach it)
+    --dir DIR          serve DIR instead of dist/ (say, a --drafts --out DIR build)
   blogroll FILE...     parse local feed files and print what the blogroll keeps
   mathml-fix DIR       apply the MathML fix-up to every .html file under DIR
 ";
@@ -56,13 +60,7 @@ fn run() -> Result<()> {
     let rest: Vec<String> = args.collect();
     match cmd.as_str() {
         "build" => build(&BuildOptions::parse(&rest)?),
-        "serve" => {
-            let port = match rest.first() {
-                Some(p) => p.parse().with_context(|| format!("not a port: {p}"))?,
-                None => 8000,
-            };
-            serve::run(&root()?.join("dist"), port)
-        }
+        "serve" => serve(&rest),
         "blogroll" => {
             if rest.is_empty() {
                 blogroll::write(&root()?, false)
@@ -113,6 +111,27 @@ impl BuildOptions {
     }
 }
 
+/// `cargo site serve [PORT] [--host ADDR] [--dir DIR]`.
+fn serve(args: &[String]) -> Result<()> {
+    let (mut port, mut host, mut dir) = (8000, "127.0.0.1".to_string(), None);
+    let mut it = args.iter();
+    while let Some(a) = it.next() {
+        match a.as_str() {
+            "--host" => host = it.next().context("--host needs an address")?.clone(),
+            "--dir" => dir = Some(PathBuf::from(it.next().context("--dir needs a directory")?)),
+            _ if a.starts_with("--host=") => host = a["--host=".len()..].into(),
+            _ if a.starts_with("--dir=") => dir = Some(a["--dir=".len()..].into()),
+            _ if a.starts_with('-') => bail!("unknown option {a:?}\n\n{USAGE}"),
+            p => port = p.parse().with_context(|| format!("not a port: {p}"))?,
+        }
+    }
+    let dir = match dir {
+        Some(d) => d,
+        None => root()?.join("dist"),
+    };
+    serve::run(&dir, &host, port)
+}
+
 /// The repository root: the nearest directory up from here with a site.typ.
 fn root() -> Result<PathBuf> {
     let here = std::env::current_dir()?;
@@ -128,6 +147,7 @@ fn build(o: &BuildOptions) -> Result<()> {
         Some(p) => std::path::absolute(p)?,
         None => root.join("dist"),
     };
+    check_out_dir(&root, &dist)?;
     let build_dir = root.join("build");
     fs::create_dir_all(&build_dir)?;
 
@@ -179,6 +199,53 @@ fn build(o: &BuildOptions) -> Result<()> {
     Ok(())
 }
 
+/// What the repository holds besides build output: --out must not point here.
+const SOURCES: [&str; 13] = [
+    ".git",
+    ".github",
+    ".cargo",
+    "assets",
+    "content",
+    "cv",
+    "data",
+    "editor",
+    "fonts",
+    "functions",
+    "lib",
+    "tools",
+    "site.typ",
+];
+
+/// The build empties its output directory first, so refuse one that may hold
+/// more than an earlier build: the repository, a folder above it or build/,
+/// its sources, another checkout, or anything git tracks.
+fn check_out_dir(root: &Path, out: &Path) -> Result<()> {
+    // Symlinks and `..` resolved, also for an `out` that doesn't exist yet.
+    let real = |p: &Path| {
+        p.ancestors()
+            .find_map(|a| {
+                let rest = p.strip_prefix(a).ok()?;
+                fs::canonicalize(a).ok().map(|r| if rest.as_os_str().is_empty() { r } else { r.join(rest) })
+            })
+            .unwrap_or_else(|| p.to_path_buf())
+    };
+    let (root, out) = (real(root), real(out));
+    let why = if root.join("build").starts_with(&out) {
+        Some("it contains the repository or its build/ folder".to_string())
+    } else if let Some(s) = SOURCES.iter().find(|s| out.starts_with(root.join(s))) {
+        Some(format!("it is part of the sources ({s})"))
+    } else if let Some(s) = ["site.typ", ".git"].iter().find(|s| out.join(s).exists()) {
+        Some(format!("it looks like a checkout (has {s})"))
+    } else {
+        let tracked = Command::new("git").args(["ls-files", "-z"]).current_dir(&out).output();
+        tracked.is_ok_and(|o| o.status.success() && !o.stdout.is_empty()).then(|| "git tracks files in it".to_string())
+    };
+    match why {
+        Some(why) => bail!("refusing to use {} as the output directory: {why}", out.display()),
+        None => Ok(()),
+    }
+}
+
 /// The CV as PDF, one per language, next to the /cv/ page (lib/cv.typ).
 fn build_cv_pdfs(root: &Path, dist: &Path) -> Result<()> {
     fs::create_dir_all(dist.join("cv"))?;
@@ -207,4 +274,33 @@ fn write_cors_headers(dist: &Path) -> Result<()> {
         write!(f, "{path}\n  Access-Control-Allow-Origin: *\n")?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn out_dir_guard() {
+        let tmp = std::env::temp_dir().join(format!("site-out-test-{}", std::process::id()));
+        let (root, other) = (tmp.join("repo"), tmp.join("other"));
+        fs::create_dir_all(root.join("content/posts")).unwrap();
+        fs::write(root.join("site.typ"), "").unwrap();
+        fs::create_dir_all(&other).unwrap();
+        fs::write(other.join("site.typ"), "").unwrap();
+        let refused = |out: &Path| check_out_dir(&root, out).is_err();
+        assert!(refused(&root));
+        assert!(refused(&tmp));
+        assert!(refused(&root.join("build")));
+        assert!(refused(&root.join("content")));
+        assert!(refused(&root.join("content/posts/new")));
+        fs::create_dir_all(root.join("dist")).unwrap();
+        assert!(refused(&root.join("dist/../content")));
+        assert!(refused(&root.join("site.typ")));
+        assert!(refused(&other));
+        assert!(!refused(&root.join("dist")));
+        assert!(!refused(&root.join("dist-drafts")));
+        assert!(!refused(&tmp.join("elsewhere")));
+        fs::remove_dir_all(&tmp).unwrap();
+    }
 }
