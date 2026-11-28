@@ -30,7 +30,8 @@
     html.span(class: "status " + status, status)
     if planted != none [ · planted #fmt-date(planted)]
     if tended != none and tended != planted [ · tended #fmt-date(tended)]
-    for t in tags { [ ]; html.a(class: "tag", href: "/tags/" + t + "/", "#" + t) }
+    if tags.len() > 0 [ · ]
+    tags.map(t => html.a(class: "tag", href: "/tags/" + t + "/", "#" + t)).join([ ])
   }
   shell(title: plain(title), description: summary, heading: title, kind: "note", meta: meta, {
     draft-banner(draft)

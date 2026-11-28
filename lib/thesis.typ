@@ -32,8 +32,13 @@
   ),
 )
 
-// The thesis the current page belongs to, from its URL (/research/<thesis>/…).
+// The thesis the current page belongs to: the one its `chapter` call names,
+// else the one in its URL (/research/<thesis>/…). The editor preview compiles
+// a chapter on its own, without a URL, so the chapter's word counts.
+#let thesis-key = state("thesis", none)
 #let here-thesis() = {
+  let key = thesis-key.get()
+  if key != none { return key }
   let e = current.get()
   if type(e) == dictionary and "url" in e { e.url.split("/").at(2, default: none) } else { none }
 }
@@ -51,6 +56,7 @@
 // Thesis figure image, served from assets/research/<thesis>/figures/.
 #let timg(name, alt: "", thesis: auto) = context {
   let key = if thesis == auto { here-thesis() } else { thesis }
+  if key == none { panic("timg: not on a thesis page; pass thesis: \"<thesis>\"") }
   let src = "/assets/research/" + key + "/figures/" + name
   if target() == "html" {
     html.img(class: "plate", src: src, alt: alt, loading: "lazy")
@@ -87,6 +93,7 @@
   page(title: [#number. #ch.title], summary: summary,
     meta: [Chapter #number of #thesis.chapters.len() · #thesis.degree, #thesis.school, #thesis.date · #link(thesis.pdf)[PDF]],
   {
+    thesis-key.update(key)
     counter(heading).update(0)
     set heading(numbering: (..n) => str(number) + "." + n.pos().map(str).join("."))
     set math.equation(numbering: k => "(" + str(number) + "." + str(k) + ")", supplement: [Eq.])
@@ -100,6 +107,7 @@
     body
     bibliography(thesis.bib, title: [References], style: "american-physics-society")
     chapter-nav(thesis.chapters, number)
+    thesis-key.update(none)
   })
 }
 

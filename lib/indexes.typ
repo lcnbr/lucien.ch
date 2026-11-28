@@ -37,7 +37,8 @@
 })
 
 #let home() = context shell(kind: "home", path: "/", {
-  html.p(class: "lede", site.description)
+  // The site description, set large, is the home page's heading.
+  html.h1(class: "lede", site.description)
   section-head("Recent posts", href: "/blog/", more: "All posts →")
   html.ul(class: "list", posts().slice(0, calc.min(5, posts().len())).map(post-item).join())
   section-head("Recently tended in the garden", href: "/garden/", more: "The garden →")

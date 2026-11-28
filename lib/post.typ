@@ -28,7 +28,8 @@
   )) <page-meta>]
   let meta = {
     if date != none { html.time(datetime: date, fmt-date(date)) }
-    for t in tags { [ ]; html.a(class: "tag", href: "/tags/" + t + "/", "#" + t) }
+    if date != none and tags.len() > 0 [ · ]
+    tags.map(t => html.a(class: "tag", href: "/tags/" + t + "/", "#" + t)).join([ ])
   }
   shell(title: plain(title), description: summary, heading: title, kind: "post", meta: meta, {
     draft-banner(draft)

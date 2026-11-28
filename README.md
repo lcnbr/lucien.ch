@@ -81,7 +81,7 @@ as `--input`s to put them in a PDF you build yourself (see the top of
   round the edge of the window as the page scrolls, leaving a line behind it).
   None has dependencies.
 - `scripts/mathml_fix.py` — Chromium sizes stretchy delimiters by their widest
-  variant, which makes `f(x)` look like `f ( x )` with New Computer Modern Math.
+  variant, which makes `f(x)` look like `f ( x )` with some math fonts.
   The fix marks fences around short content as `stretchy="false"`.
 - `.github/workflows/build.yml` — builds on every push and PR, uploads the site
   as an artifact, and deploys to Cloudflare Pages once the

@@ -362,7 +362,7 @@ def build_cv_pdfs() -> None:
     for lang in ("en", "fr"):
         out = DIST / "cv" / f"lucien-huber-cv-{lang}.pdf"
         out.parent.mkdir(parents=True, exist_ok=True)
-        subprocess.run(["typst", "compile", "--root", str(ROOT), "--font-path", str(ROOT / "cv" / "fonts"),
+        subprocess.run(["typst", "compile", "--root", str(ROOT), "--font-path", str(ROOT / "cv" / "fonts"), "--font-path", str(ROOT / "fonts"),
                         "--input", f"lang={lang}", str(ROOT / "cv" / "cv-pdf.typ"), str(out)], check=True)
     print("cv: built dist/cv/lucien-huber-cv-{en,fr}.pdf")
 

@@ -7,7 +7,7 @@
 // Personal details. The repository is public, and so is the editor's copy of
 // these sources, so phone, address and birthday are not written here: they
 // only exist in a PDF you build yourself, passed as inputs, e.g.
-//   typst compile --root . --font-path cv/fonts --input lang=fr \
+//   typst compile --root . --font-path cv/fonts --font-path fonts --input lang=fr \
 //     --input phone="+41 …" --input address="…" --input birthday=YYYY-MM-DD \
 //     cv/cv-pdf.typ cv-fr.pdf
 // The site build passes none of them, so the page and the PDFs on the site
@@ -30,6 +30,8 @@
 #let public = ("email", "photo") + ("phone", "address", "birthday").filter(k => contact.at(k) != none)
 
 #let d(y, m, day: 1) = datetime(year: y, month: m, day: day)
+// A page of this site: a site link on the web page, a full URL in the PDFs.
+#let site-link(path, body) = context link(if target() == "html" { path } else { "https://lucien.ch" + path }, body)
 
 // One entry: `title`, `location`, `start`, `end` (none = ongoing), `body`.
 // Fields that differ by language are (en: ..., fr: ...).
@@ -48,8 +50,8 @@
     location: "ETH Zurich",
     start: d(2020, 9), end: d(2022, 11),
     body: (
-      en: [Overall average: 5.43/6. \ Master's thesis: "Gravitational waves from Feynman diagrams", available #link("https://lucien.ch/research/msc-thesis/")[here].],
-      fr: [Moyenne générale : 5.43/6. \ Thèse de Master : « Gravitational waves from Feynman diagrams », disponible #link("https://lucien.ch/research/msc-thesis/")[ici].],
+      en: [Overall average: 5.43/6. \ Master's thesis: #site-link("/research/msc-thesis/")[_Gravitational Waves from Feynman Diagrams_].],
+      fr: [Moyenne générale : 5.43/6. \ Thèse de Master : #site-link("/research/msc-thesis/")[_Gravitational Waves from Feynman Diagrams_].],
     ),
   ),
   (
@@ -225,11 +227,12 @@
 
 
 // ---------------------------------------------------------------------------
-// PDF layout (A4), after the original Typst CV. Fonts in cv/fonts/; the body
-// font is Reforma 2018 where it is installed, New Computer Modern otherwise.
+// PDF layout (A4), after the original Typst CV. The site's faces: Atkinson
+// Hyperlegible (cv/fonts/) for headings and lists, Literata (fonts/) for the
+// running text.
 
 #let heading-font = "Atkinson Hyperlegible"
-#let body-font = ("Reforma 2018", "New Computer Modern")
+#let body-font = "Literata"
 #let size = 3mm
 
 #let pdf-logo(unit: 4mm) = box(baseline: -0.5 * unit, {
@@ -296,6 +299,6 @@
       #grid(columns: 3, gutter: 2mm, c.languages.join(", "))],
     grid(gutter: 2mm, heading(l.programming), c.programming.join(", ")),
     grid(gutter: 2mm, heading(l.clubs), ..c.clubs.map(pdf-club)),
-    grid(gutter: 2mm, heading(l.hobbies), { set par(justify: true); c.hobbies }),
+    grid(gutter: 2mm, heading(l.hobbies), { set par(justify: true); set text(font: body-font); c.hobbies }),
   )
 }

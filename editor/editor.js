@@ -233,8 +233,7 @@ function labelsDefined(text) {
   return out;
 }
 function slugOf(path) {
-  const m = path.match(/^content\/(?:posts\/\d{4}-\d{2}-\d{2}-|garden\/|pages\/)(.+)\.typ$/);
-  return m && m[1];
+  return place(path)?.slug ?? null;
 }
 // Where labels defined on other pages live: slug -> page URL, label ->
 // page URL#label. Used to point preview links at the real pages.
@@ -525,12 +524,23 @@ function siteHref(p) {
   return u.href;
 }
 
-function urlFor(path) {
+// Slug and URL of a content file, as the site build names them.
+// Research: index.typ is /research/, a thesis is a folder whose index.typ is
+// /research/<thesis>/ (slug "<thesis>"), and its chapter <stem>.typ is
+// /research/<thesis>/<stem>/ (slug "<thesis>-<stem>").
+function place(path) {
   let m;
-  if ((m = path.match(/^content\/posts\/\d{4}-\d{2}-\d{2}-(.+)\.typ$/))) return `/blog/${m[1]}/`;
-  if ((m = path.match(/^content\/garden\/(.+)\.typ$/))) return `/garden/${m[1]}/`;
-  if ((m = path.match(/^content\/pages\/(.+)\.typ$/))) return `/${m[1]}/`;
-  return "/";
+  if ((m = path.match(/^content\/posts\/\d{4}-\d{2}-\d{2}-([^/]+)\.typ$/))) return { slug: m[1], url: `/blog/${m[1]}/` };
+  if ((m = path.match(/^content\/garden\/([^/]+)\.typ$/))) return { slug: m[1], url: `/garden/${m[1]}/` };
+  if ((m = path.match(/^content\/pages\/([^/]+)\.typ$/))) return { slug: m[1], url: `/${m[1]}/` };
+  if (path === "content/research/index.typ") return { slug: "research", url: "/research/" };
+  if ((m = path.match(/^content\/research\/([^/]+)\.typ$/))) return { slug: m[1], url: `/research/${m[1]}/` };
+  if ((m = path.match(/^content\/research\/([^/]+)\/index\.typ$/))) return { slug: m[1], url: `/research/${m[1]}/` };
+  if ((m = path.match(/^content\/research\/([^/]+)\/([^/]+)\.typ$/))) return { slug: `${m[1]}-${m[2]}`, url: `/research/${m[1]}/${m[2]}/` };
+  return null;
+}
+function urlFor(path) {
+  return place(path)?.url ?? "/";
 }
 
 const isPage = p => p.startsWith("content/") && p.endsWith(".typ");
