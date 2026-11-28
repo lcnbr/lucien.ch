@@ -13,7 +13,7 @@
 Packages that draw (fletcher, cetz, quill, lilaq) go through `diagram-frame`,
 which emits inline SVG in HTML and leaves the PDF untouched.
 
-== A commutative diagram
+= A commutative diagram
 
 // fletcher 0.6: edges inside a math-mode diagram need `in-math: true`.
 #let hom = edge.with(in-math: true)
@@ -22,7 +22,7 @@ which emits inline SVG in HTML and leaves the PDF untouched.
   G slash ker(f) hom("ur", tilde(f), "hook-->")
 $)), caption: [First isomorphism theorem.])
 
-== A Feynman diagram
+= A Feynman diagram
 
 #figure(diagram-frame(diagram(
   spacing: (12mm, 8mm),
@@ -35,7 +35,7 @@ $)), caption: [First isomorphism theorem.])
   edge((3, 1), (4, 2), "-<|-"),
 )), caption: [$e^+ e^- -> mu^+ mu^-$ at tree level.])
 
-== A data plot
+= A data plot
 
 The data lives in `data/oscillator.csv`, so it can come from a simulation run
 elsewhere.

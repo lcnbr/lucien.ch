@@ -103,4 +103,6 @@
 
 #for lang in langs { one-cv(lang) }
 
-#html.script("(function(){var h=location.hash.slice(1),fr=document.getElementById('cv-fr'),en=document.getElementById('cv-en');if(!fr)return;if(h==='fr'||(h!=='en'&&/^fr\\b/i.test(navigator.language||'')))fr.checked=true;[en,fr].forEach(function(r){r.addEventListener('change',function(){history.replaceState(null,'','#'+r.value)})})})();")
+// #en / #fr pick the language, on load and when a link changes the hash;
+// with neither, a French browser gets French.
+#html.script("(function(){var fr=document.getElementById('cv-fr'),en=document.getElementById('cv-en');if(!fr)return;function pick(){var h=location.hash.slice(1);if(h==='fr')fr.checked=true;else if(h==='en')en.checked=true;}pick();if(!location.hash&&/^fr\\b/i.test(navigator.language||''))fr.checked=true;addEventListener('hashchange',pick);[en,fr].forEach(function(r){r.addEventListener('change',function(){history.replaceState(null,'','#'+r.value)})})})();")

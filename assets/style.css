@@ -12,6 +12,7 @@
 @font-face { font-family: "Atkinson"; src: url("fonts/AtkinsonHyperlegible-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "Atkinson"; src: url("fonts/AtkinsonHyperlegible-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
 @font-face { font-family: "Atkinson"; src: url("fonts/AtkinsonHyperlegible-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Atkinson"; src: url("fonts/AtkinsonHyperlegible-700-italic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: swap; }
 
 :root {
   --fg: #1d1d1f;
@@ -54,7 +55,9 @@ main { padding-bottom: var(--space-6); }
 ::selection { background: color-mix(in srgb, var(--accent) 22%, transparent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
 
-math { font-family: "STIX Two Math", math; }
+/* STIX Two Math has one weight: in bold headings, keep it rather than let
+   the browser fake a bold. */
+math { font-family: "STIX Two Math", math; font-weight: 400; }
 math[display="block"] { margin: 1em 0; overflow-x: auto; overflow-y: hidden; padding: 0.1em 0; }
 
 /* Links: a light underline that darkens on hover. */
@@ -65,7 +68,7 @@ a {
 }
 a:hover { text-decoration-color: currentColor; }
 
-/* Headings in Atkinson, tight and dark; body text in Computer Modern. */
+/* Headings in Atkinson, tight and dark; body text in Literata. */
 h1, h2, h3, h4, h5, h6 { font-family: var(--sans); font-weight: 700; color: var(--fg); text-wrap: balance; }
 h1 { font-size: var(--step-3); line-height: 1.05; letter-spacing: -0.025em; margin: 0; }
 h2 { font-size: var(--step-2); line-height: 1.15; letter-spacing: -0.015em; margin: var(--space-6) 0 var(--space-3); }
@@ -80,11 +83,13 @@ figure pre { text-align: left; }
 figcaption { color: var(--muted); font-size: 0.9em; margin-top: 0.5em; }
 blockquote { margin: 1.25em 0; padding-left: 1em; border-left: 2px solid var(--fg); color: var(--muted); }
 hr { border: 0; border-top: 1px solid var(--rule); margin: var(--space-5) 0; }
-table { border-collapse: collapse; margin: 1em auto; font-variant-numeric: tabular-nums; }
+/* A table wider than the column (the thesis's Feynman rules on a phone)
+   scrolls inside its own box, not the page. */
+table { display: block; width: fit-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 1em auto; font-variant-numeric: tabular-nums; }
 td, th { padding: 0.35em 0.7em; border-bottom: 1px solid var(--rule); }
 th { font: 700 var(--step--1)/1.4 var(--sans); text-align: left; border-bottom-color: var(--fg); }
 
-/* Site header: name, three sections, search. The current section is underlined. */
+/* Site header: logo and name, the sections, search. The current section is underlined. */
 .site-header {
   display: flex; justify-content: space-between; align-items: center; gap: var(--space-3);
   padding-top: var(--space-5); padding-bottom: var(--space-3); border-bottom: 1px solid var(--rule);
@@ -146,9 +151,12 @@ th { font: 700 var(--step--1)/1.4 var(--sans); text-align: left; border-bottom-c
 /* Section heads: a short label under a dark rule. Lists on the home page,
    backlinks, comments, blogroll, CV. */
 .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); margin: var(--space-6) 0 var(--space-4); padding-top: var(--space-2); border-top: 2px solid var(--fg); }
-.section-head h2, .backlinks h2, .comments h2, .cv h2 {
+.section-head h2, main h2:has(+ .list), .backlinks h2, .comments h2, .cv h2 {
   font: 700 var(--step--2)/1.4 var(--sans); text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg); margin: 0;
 }
+/* A heading written in a page right above a list of pages (About, Research)
+   gets the same look. */
+main h2:has(+ .list) { margin: var(--space-6) 0 var(--space-4); padding-top: var(--space-2); border-top: 2px solid var(--fg); }
 .section-head a { font: var(--step--1)/1.4 var(--sans); color: var(--muted); text-decoration: none; white-space: nowrap; }
 .section-head a:hover { color: var(--accent); }
 
@@ -236,6 +244,8 @@ section[role="doc-endnotes"] { display: none; }
 .sidenote-mark { color: var(--muted); margin-right: 0.15em; }
 .sidenote-toggle:checked + .sidenote { display: block; }
 .sidenote math { font-size: 1em; }
+/* Inline equations don't wrap: a long one scrolls inside its note. */
+.sidenote { overflow-x: auto; overflow-y: hidden; }
 /* Previews of other pages (hover.js) strip ids, so their toggles would be dead. */
 .hover-card .sidenote, .window .sidenote { display: none !important; }
 .hover-card .sidenote-number, .window .sidenote-number { pointer-events: none; color: inherit; }
@@ -243,7 +253,7 @@ section[role="doc-endnotes"] { display: none; }
 /* Wide screens: notes sit in the right margin beside the line that cites them,
    and the column shifts left so text and margin are centred together. */
 @media (min-width: 1100px) {
-  html:not(.editing) body:has(main .sidenote) :is(main, .site-header, .site-footer) {
+  html:not(.editing) body:has(main :is(.sidenote, .cv-photo)) :is(main, .site-header, .site-footer) {
     margin-left: max(0px, calc((100% - var(--measure) - var(--sn-gap) - var(--sn-w)) / 2));
   }
   html:not(.editing) .sidenote {
@@ -284,7 +294,9 @@ html.editing .edit-tab { opacity: 0; pointer-events: none; }
   html.editing { padding-right: 0; padding-bottom: 58vh; }
   .edit-dock { top: auto; left: 0; width: auto; height: 58vh; transform: translateY(100%); box-shadow: 0 -12px 30px rgb(0 0 0 / 0.15); }
   .edit-dock-handle { display: none; }
-  /* Phones: a small round button, label kept for screen readers. */
+  /* Phones: a small round button, label kept for screen readers, and only
+     for the author (edit.js); readers have the footer link. */
+  html:not(.edit-author) .edit-tab { display: none; }
   .edit-tab { top: auto; bottom: 16px; right: 16px; width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; transform: none; opacity: 0.6; box-shadow: 0 4px 14px rgb(0 0 0 / 0.18); }
   .edit-tab:hover, .edit-tab:focus-visible { transform: none; opacity: 1; }
   .edit-tab span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -329,7 +341,7 @@ html.editing .edit-tab { opacity: 0; pointer-events: none; }
   .search-open kbd, .search-open .search-label { display: none; }
   .search-open { padding: 0.4em; }
   /* Phones: name and search on the first row, the sections on the second. */
-  .site-header { flex-wrap: wrap; gap: var(--space-2) var(--space-4); padding-top: var(--space-3); padding-bottom: 0; }
+  .site-header { flex-wrap: wrap; gap: var(--space-2) var(--space-3); padding-top: var(--space-3); padding-bottom: 0; }
   .site-header nav { display: contents; }
   .site-title { flex: 1; }
   .site-header::after { content: ""; flex-basis: 100%; order: 2; }
@@ -358,8 +370,11 @@ html.editing .edit-tab { opacity: 0; pointer-events: none; }
 body:has(#cv-fr:checked) .cv[lang="fr"] { display: block; }
 body:has(#cv-fr:checked) .cv-pdf[lang="fr"] { display: inline-flex; }
 .cv-photo { float: right; width: 84px; height: 112px; object-fit: cover; border-radius: var(--radius); margin: 0 0 var(--space-3) var(--space-4); }
+/* Wide screens: the photo hangs in the margin, which is only as wide as the
+   photo, so the column and the photo are centred together (see sidenotes). */
 @media (min-width: 1100px) {
-  .cv-photo { width: 120px; height: 160px; margin: 0 calc(-1 * (120px + var(--sn-gap))) 0 0; }
+  body:has(main .cv-photo) { --sn-w: 120px; }
+  .cv-photo { width: var(--sn-w); height: 160px; margin: 0 calc(-1 * (var(--sn-w) + var(--sn-gap))) 0 0; }
 }
 .cv-contact { color: var(--muted); font: var(--step--1)/1.6 var(--sans); }
 /* flow-root: on phones the rule stops short of the floated photo. */
@@ -403,4 +418,4 @@ body:has(#cv-fr:checked) .cv-pdf[lang="fr"] { display: inline-flex; }
 @media (max-width: 600px) { .lede { font-size: 1.05rem; } }
 @media (max-width: 600px) { .scroll-mark { --u: 8px; --inset: 5px; --corner: 14px; } }
 html.editing .scroll-mark { display: none; }
-@media print { .scroll-mark { display: none; } }
+@media print, (prefers-reduced-motion: reduce) { .scroll-mark { display: none; } }

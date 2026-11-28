@@ -15,6 +15,10 @@
   tab.type = "button"; tab.className = "edit-tab"; tab.title = "Edit this page (E)";
   tab.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg><span>Edit</span>';
   document.body.append(tab);
+  // On phones the tab is a button over the text, so it only shows in a
+  // browser that has saved a GitHub token in the editor (the author's);
+  // everyone else has the Edit link in the footer.
+  try { if (localStorage.getItem("edit.token")) root.classList.add("edit-author"); } catch {}
 
   // The editor compiles in a worker only on a cross-origin isolated page.
   // Pages are served isolated only while the edit=1 cookie is set

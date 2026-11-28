@@ -14,7 +14,7 @@ Prof. Babis Anastasiou. It is reproduced here chapter by chapter; the typeset or
 available as a #link(thesis.pdf)[PDF (14 MB)]. All the code used for the thesis is on
 GitHub at #link("https://github.com/lcnbr/GWAmplitudes")[lcnbr/GWAmplitudes].
 
-== Abstract
+= Abstract
 
 The goal of this thesis is to explain the nascent field of scattering amplitudes in gravitational wave physics. We explore the context in which these tools are revolutionizing the field, and then go into detail of their construction and application.
 
@@ -24,7 +24,7 @@ The fifth chapter is the main focus of the thesis, and is devoted to the scatter
 
 In the last chapter we provide some concluding remarks and a brief outlook.
 
-== Contents
+= Contents
 
 + #n(<msc-thesis-introduction>)[Introduction] — Why scattering amplitudes from particle physics are useful for gravitational wave theory.
 + #n(<msc-thesis-gw-generation>)[Gravitational Wave Generation] — Gravitational waves from the linearised Einstein equations, and their astrophysical sources.
@@ -33,7 +33,7 @@ In the last chapter we provide some concluding remarks and a brief outlook.
 + #n(<msc-thesis-scattering-amplitudes>)[Scattering Amplitudes and GWs] — From amplitudes to potentials, the KMOC formalism, and scalar QED amplitudes computed with QGRAF, Julia and FORM.
 + #n(<msc-thesis-conclusion>)[Conclusion] — Concluding remarks and outlook.
 
-== Acknowledgements
+= Acknowledgements
 
 First and foremost I would like to thank my supervisor, Prof.~Babis Anastasiou, for his trust, his support, and kindness throughout the last half year that has led to this thesis. Without his curiosity towards this new subject, I would have never discovered and learned about this wonderful world at the confluence of two great physical theories, #acr("gr", form: "full") and #acr("qft", form: "full") . I would also like to extend this thanks to the rest of the theoretical particle physics group a ETH. Dr Achilleas Lazopoulos, Dr.~Ben Ruijl, Dr.~Valentin Hirschi, Rayan Haindl, Dario Kermanschah, Zeno Capatti, Matilde Vicini, and Julia Karlen, the many shared lunches, coffee breaks, and discussions have been a incredible source of inspiration and motivation for me. In particular, I would like to thank Ben for his help with all things `FORM`, Zeno for our very insightful discussions and your great suggestions, and Julia for reading through the first draft of this thesis.
 

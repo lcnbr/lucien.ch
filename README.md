@@ -88,7 +88,7 @@ as `--input`s to put them in a PDF you build yourself (see the top of
 - `tools/site/` — the build tool (Rust): manifest, blogroll, Typst, CV PDFs,
   MathML fix-up, the editor, the drafts gate and a local server.
 - `tools/site/src/mathml.rs` — Chromium sizes stretchy delimiters by their widest
-  variant, which makes `f(x)` look like `f ( x )` with New Computer Modern Math.
+  variant, which makes `f(x)` look like `f ( x )` with some math fonts.
   The fix marks fences around short content as `stretchy="false"`.
 - `.github/workflows/build.yml` — builds on every push and PR, uploads the site
   as an artifact, and deploys to Cloudflare Pages once the

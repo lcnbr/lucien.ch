@@ -189,6 +189,9 @@ fn build_cv_pdfs(root: &Path, dist: &Path) -> Result<()> {
                 .arg(root)
                 .arg("--font-path")
                 .arg(root.join("cv/fonts"))
+                // Literata, the running text.
+                .arg("--font-path")
+                .arg(root.join("fonts"))
                 .args(["--input", &format!("lang={lang}")])
                 .arg(root.join("cv/cv-pdf.typ"))
                 .arg(dist.join(format!("cv/lucien-huber-cv-{lang}.pdf"))),

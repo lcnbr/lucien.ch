@@ -16,10 +16,10 @@ I've been wanting to have a personal site for a long time. I've always been very
 
 
 Every equation on this page is written in Typst and exported as native MathML.
-No JavaScript renders it; the browser does, using the same New Computer Modern
-Math font Typst uses for PDF.#footnote[Firefox has rendered MathML for years; Chromium caught up in version 109, and Safari follows its own WebKit implementation.]
+No JavaScript renders it; the browser does, with STIX Two Math, the font Typst
+also uses on this site when it draws an equation as an image.#footnote[Firefox has rendered MathML for years; Chromium caught up in version 109, and Safari follows its own WebKit implementation.]
 
-== Inline and display
+= Inline and display
 
 The Gaussian integral $integral_(-oo)^oo e^(-x^2) dif x = sqrt(pi)$ sits inline,
 and its $n$-dimensional cousin#footnote[Valid for symmetric positive-definite $A$: diagonalise it and the integral factorises into $n$ one-dimensional Gaussians.] gets its own line:
@@ -27,7 +27,7 @@ and its $n$-dimensional cousin#footnote[Valid for symmetric positive-definite $A
 $ integral_(RR^n) e^(-1/2 x^T A x + J^T x) dif^n x
   = sqrt((2 pi)^n / (det A)) thin e^(1/2 J^T A^(-1) J) $
 
-== Aligned systems
+= Aligned systems
 
 Maxwell's equations in differential form:#footnote[In SI units. In Gaussian units the factors of $epsilon_0$ and $mu_0$ give way to powers of $c$.]
 
@@ -36,7 +36,7 @@ $ nabla dot bold(E) &= rho / epsilon_0 \
   nabla times bold(E) &= -(partial bold(B)) / (partial t) \
   nabla times bold(B) &= mu_0 bold(J) + mu_0 epsilon_0 (partial bold(E)) / (partial t) $
 
-== Matrices, cases and Dirac notation
+= Matrices, cases and Dirac notation
 
 $ sigma_x = mat(0, 1; 1, 0), quad
   sigma_y = mat(0, -i; i, 0), quad
@@ -50,7 +50,7 @@ $ chevron.l psi_f | e^(-i H t / planck) | psi_i chevron.r
 The geometric phase picked up around a closed loop is treated in the
 #n(<berry-phase>)[note on the Berry phase].
 
-== A plot drawn with plain Typst
+= A plot drawn with plain Typst
 
 #let plot-sinc() = {
   let w = 10cm
@@ -71,7 +71,7 @@ The geometric phase picked up around a closed loop is treated in the
 
 #figure(diagram-frame(plot-sinc()), caption: [$sin(x) slash x$ on $[-20, 20]$, drawn with `curve` and exported as SVG.])
 
-== The escape hatch
+= The escape hatch
 
 If a browser ever draws an equation badly, `svg-math` renders that one as SVG:
 

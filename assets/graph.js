@@ -21,16 +21,24 @@
       links = links.filter(l => near.has(l.source) && near.has(l.target));
     }
     if (!nodes.length) return;
-    const css = getComputedStyle(document.documentElement);
-    const fg = css.getPropertyValue("--fg").trim(), muted = css.getPropertyValue("--muted").trim(),
-      accent = css.getPropertyValue("--accent").trim(), rule = css.getPropertyValue("--rule").trim(),
-      sans = css.getPropertyValue("--sans").trim() || "sans-serif";
+    // Colours from the page's CSS, read again when the colour scheme changes.
+    let fg, muted, accent, rule, sans;
+    const readColors = () => {
+      const css = getComputedStyle(document.documentElement), v = k => css.getPropertyValue(k).trim();
+      fg = v("--fg"); muted = v("--muted"); accent = v("--accent"); rule = v("--rule"); sans = v("--sans") || "sans-serif";
+    };
+    readColors();
     const canvas = document.createElement("canvas");
     el.appendChild(canvas);
-    const dpr = window.devicePixelRatio || 1;
-    let W = el.clientWidth, H = el.clientHeight;
-    canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.width = W + "px"; canvas.style.height = H + "px";
-    const ctx = canvas.getContext("2d"); ctx.scale(dpr, dpr);
+    const ctx = canvas.getContext("2d");
+    let W = 0, H = 0;
+    const fit = () => {
+      const dpr = window.devicePixelRatio || 1;
+      W = el.clientWidth; H = el.clientHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.width = W + "px"; canvas.style.height = H + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    fit();
 
     const byId = new Map(nodes.map((n, i) => [n.id, Object.assign({}, n, {
       x: W / 2 + 80 * Math.cos(i * 2.4), y: H / 2 + 80 * Math.sin(i * 2.4), vx: 0, vy: 0, deg: 0 })]));
@@ -66,7 +74,18 @@
         }
       });
     }
-    (function loop() { step(); render(); if (alpha > 0.02) requestAnimationFrame(loop); })();
+    let running = false;
+    const loop = () => { step(); render(); running = alpha > 0.02; if (running) requestAnimationFrame(loop); };
+    loop();
+    // The box changes size (a phone turns, the window is resized): resize the
+    // canvas and let the nodes settle into it again.
+    new ResizeObserver(() => {
+      if (el.clientWidth === W && el.clientHeight === H) return;
+      fit();
+      alpha = Math.max(alpha, 0.3);
+      if (!running) loop();
+    }).observe(el);
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { readColors(); render(); });
 
     const pick = e => { const b = canvas.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
       return N.find(n => Math.hypot(n.x - x, n.y - y) < 10) || null; };

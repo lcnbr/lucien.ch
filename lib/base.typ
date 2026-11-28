@@ -98,9 +98,9 @@
       html.meta(name: "viewport", content: "width=device-width, initial-scale=1")
       html.title(if title == none or title == "" { site.title } else { title + " · " + site.title })
       if description != none { html.meta(name: "description", content: description) }
-      // The math font (font-display: block) and the heading face, which is
-      // above the fold on every page.
-      for f in ("STIXTwoMath-Regular", "AtkinsonHyperlegible-700") {
+      // The body and heading faces, above the fold on every page. Not the
+      // math font: it is large and most pages have no equations.
+      for f in ("Literata-Regular", "AtkinsonHyperlegible-700") {
         html.elem("link", attrs: (rel: "preload", href: "/assets/fonts/" + f + ".woff2", "as": "font", type: "font/woff2", crossorigin: ""))
       }
       html.link(rel: "stylesheet", href: "/assets/style.css")
