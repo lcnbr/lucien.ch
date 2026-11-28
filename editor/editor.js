@@ -200,7 +200,9 @@ async function startCompiler() {
     },
   });
   step("Loading fonts");
-  const fonts = ["NewCM10-Regular.otf", "NewCM10-Italic.otf", "NewCM10-Bold.otf", "NewCM10-BoldItalic.otf", "NewCMMath-Regular.otf", "DejaVuSansMono.ttf"];
+  // Typst's defaults, then the site's fonts from fonts/ (lib/base.typ uses them for diagrams).
+  const fonts = ["NewCM10-Regular.otf", "NewCM10-Italic.otf", "NewCM10-Bold.otf", "NewCM10-BoldItalic.otf", "NewCMMath-Regular.otf", "DejaVuSansMono.ttf",
+    "Literata-Regular.ttf", "Literata-Italic.ttf", "Literata-Bold.ttf", "Literata-BoldItalic.ttf", "STIXTwoMath-Regular.otf"];
   await compiler.addFonts(...fonts.map(f => fetch(new URL("fonts/" + f, VENDOR)).then(r => r.arrayBuffer()).then(b => new Uint8Array(b))));
   for (const path of files.keys()) if (files.get(path).loaded) await pushToCompiler(path);
   step("");

@@ -24,8 +24,24 @@
   out
 }
 
+// The logo, dash dot dot dash dot dot, as inline SVG in the text colour. In
+// units of a bar: bars 1 × 0.4, dots 0.4 across, gaps 0.6. The PDF CV draws
+// the same shape with boxes (`pdf-logo` in cv.typ), assets/mark.js draws it as
+// dashes, and assets/favicon.svg stacks it in two rows.
+#let logo(class: "logo") = {
+  let x = 0
+  let parts = ()
+  for w in (1, 0.4, 0.4, 1, 0.4, 0.4) {
+    parts.push(html.elem("rect", attrs: (x: str(calc.round(x, digits: 2)), y: "0", width: str(w), height: "0.4", rx: "0.2")))
+    x += w + 0.6
+  }
+  html.elem("svg", attrs: (class: class, viewBox: "0 0 6.6 0.4", "aria-hidden": "true"), parts.join())
+}
+
+// The header logo is where the scroll mark (assets/mark.js) starts from: it
+// takes over from it once the header has scrolled away.
 #let nav-bar(path) = html.header(class: "site-header", {
-  html.a(class: "site-title", href: "/", site.title)
+  html.a(class: "site-title", href: "/", { logo(); html.span(site.title) })
   html.nav(aria-label: "Site", {
     let here = section-of(path)
     for n in site.nav {
@@ -48,7 +64,7 @@
 // Every page has the same head: an optional trail of links (`crumbs`, from
 // the path), the heading, and an optional `meta` line (date, status, tags…).
 // `path` is the page's URL; content pages take it from the manifest.
-#let shell(title: none, description: none, heading: none, kind: "page", path: none, meta: none, body) = {
+#let shell(title: none, description: none, heading: none, kind: "page", path: none, meta: none, actions: none, body) = {
   set text(lang: site.lang)
   // HTML export drops equation numbers; put them back beside numbered equations.
   show math.equation.where(block: true): it => {
@@ -64,6 +80,10 @@
   // label/checkbox pair needs no JavaScript. Typst still emits its endnote
   // list; the entries are dropped and the empty list is hidden by CSS.
   show footnote.entry: it => if target() == "html" { none } else { it }
+  // Diagrams, plots and #svg-math are drawn by Typst as SVG, with its own
+  // fonts: use the page's (fonts/; build.py passes --font-path).
+  set text(font: ("Literata", "New Computer Modern"))
+  show math.equation: set text(font: ("STIX Two Math", "New Computer Modern Math"))
   show footnote: it => {
     if target() != "html" { return it }
     let num = counter(footnote).display(it.numbering)
@@ -78,12 +98,18 @@
       html.meta(name: "viewport", content: "width=device-width, initial-scale=1")
       html.title(if title == none or title == "" { site.title } else { title + " · " + site.title })
       if description != none { html.meta(name: "description", content: description) }
-      html.elem("link", attrs: (rel: "preload", href: "/assets/fonts/NewCMMath-Regular.woff2", "as": "font", type: "font/woff2", crossorigin: ""))
+      // The math font (font-display: block) and the heading face, which is
+      // above the fold on every page.
+      for f in ("STIXTwoMath-Regular", "AtkinsonHyperlegible-700") {
+        html.elem("link", attrs: (rel: "preload", href: "/assets/fonts/" + f + ".woff2", "as": "font", type: "font/woff2", crossorigin: ""))
+      }
       html.link(rel: "stylesheet", href: "/assets/style.css")
+      html.link(rel: "icon", type: "image/svg+xml", href: "/assets/favicon.svg")
       html.link(rel: "alternate", type: "application/rss+xml", title: site.title, href: "/feed.xml")
       if kind in ("note", "index") { html.script(src: "/assets/graph.js", defer: true, "") }
       html.script(src: "/assets/hover.js", defer: true, "")
       html.script(src: "/assets/search.js", defer: true, "")
+      html.script(src: "/assets/mark.js", defer: true, "")
       if kind in ("post", "note", "page") { html.script(src: "/assets/edit.js", defer: true, "") }
     })
     html.body(class: kind, context {
@@ -100,7 +126,14 @@
               html.nav(class: "crumbs", aria-label: "Breadcrumb", cs.map(c => html.a(href: c.href, c.label)).join(html.span(class: "sep", aria-hidden: true, "/")))
             }
             html.h1(heading)
-            if meta != none { html.p(class: "meta", meta) }
+            // `actions` (buttons such as the CV's language switch) sit at
+            // the end of the meta line, and wrap below it on phones.
+            if actions != none {
+              html.div(class: "meta-row", {
+                if meta != none { html.p(class: "meta", meta) }
+                html.div(class: "page-actions", actions)
+              })
+            } else if meta != none { html.p(class: "meta", meta) }
           })
         }
         body

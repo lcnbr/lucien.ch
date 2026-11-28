@@ -3,7 +3,9 @@
 #import "state.typ": current, check-draft, draft-banner
 #import "util.typ": plain
 
-#let page(title: none, summary: none, meta: none, draft: false, body) = context {
+// `heading` replaces the title as the visible heading (the CV shows the name);
+// `actions` go beside the meta line (see `shell` in base.typ).
+#let page(title: none, summary: none, heading: auto, meta: none, actions: none, draft: false, body) = context {
   check-draft(draft)
   let here = current.get()
   [#metadata((
@@ -15,7 +17,7 @@
     tags: (),
     draft: draft,
   )) <page-meta>]
-  shell(title: plain(title), description: summary, heading: title, kind: "page", meta: meta, {
+  shell(title: plain(title), description: summary, heading: if heading == auto { title } else { heading }, kind: "page", meta: meta, actions: actions, {
     draft-banner(draft)
     html.elem("article", attrs: ("data-pagefind-body": ""), body)
   })

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The logo (dash dot dot dash dot dot) in two rows on a tile; colours from assets/style.css. -->
+  <style>.tile{fill:#1d1d1f}.mark{fill:#fdfcf9}@media (prefers-color-scheme:dark){.tile{fill:#e8e6e1}.mark{fill:#16161a}}</style>
+  <rect class="tile" width="32" height="32" rx="7"/>
+  <g class="mark">
+    <rect x="5.5" y="10.6" width="7" height="2.8" rx="1.4"/><rect x="16.7" y="10.6" width="2.8" height="2.8" rx="1.4"/><rect x="23.7" y="10.6" width="2.8" height="2.8" rx="1.4"/>
+    <rect x="5.5" y="18.6" width="7" height="2.8" rx="1.4"/><rect x="16.7" y="18.6" width="2.8" height="2.8" rx="1.4"/><rect x="23.7" y="18.6" width="2.8" height="2.8" rx="1.4"/>
+  </g>
+</svg>

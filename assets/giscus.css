@@ -1,15 +1,16 @@
 /* giscus theme for lucien.ch: the site's palette (assets/style.css) and
- * Computer Modern text. Loaded by giscus inside its iframe from
+ * fonts. Loaded by giscus inside its iframe from
  * lib/comments.typ; the fonts need CORS (see write_headers in build.py).
  * Variable list from giscus' light/dark themes:
  * MIT License, Copyright (c) 2018 GitHub Inc.
  * https://github.com/primer/primitives/blob/main/LICENSE
  */
 
-@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
-@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
-@font-face { font-family: "NewCM"; src: url("fonts/NewCM10-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "Literata"; src: url("fonts/Literata-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Literata"; src: url("fonts/Literata-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Literata"; src: url("fonts/Literata-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Atkinson"; src: url("fonts/AtkinsonHyperlegible-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Atkinson"; src: url("fonts/AtkinsonHyperlegible-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
 
 main {
   --color-prettylights-syntax-comment: #6e7781;
@@ -183,9 +184,9 @@ main {
   }
 }
 
-/* Text in the site's serif; small UI in the same sans as the search box. */
+/* Text in the site's serif; small UI in its sans (Atkinson Hyperlegible). */
 main {
-  font-family: "NewCM", "Latin Modern Roman", Georgia, serif;
+  font-family: "Literata", Georgia, serif;
   font-size: 16px;
   line-height: 1.55;
 }
@@ -196,12 +197,12 @@ main .gsc-comment-author, main .gsc-header, main .gsc-reactions, main .gsc-comme
 main .gsc-reply-box, main .gsc-comment-box-tabs, main .gsc-comment-box-bottom, main .btn,
 main .gsc-social-reaction-summary-item, main .gsc-direct-reaction-button, main .gsc-comment-reactions,
 main .gsc-timeline > .gsc-comment-box, main time {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Atkinson", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 main .gsc-header { font-size: 0.85rem; }
 main .gsc-comment > div, main .gsc-comment-box { border-radius: 6px; }
 main .btn, main .btn-primary { border-radius: 4px; font-weight: 500; }
-main .gsc-comment-box-textarea { font-family: "NewCM", Georgia, serif; font-size: 1rem; }
+main .gsc-comment-box-textarea { font-family: "Literata", Georgia, serif; font-size: 1rem; }
 
 main .pagination-loader-container {
   background-image: url("https://github.com/images/modules/pulls/progressive-disclosure-line.svg");

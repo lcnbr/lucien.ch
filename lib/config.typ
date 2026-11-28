@@ -13,7 +13,7 @@
     category: "Announcements",
     category-id: "DIC_kwDOV-Hg-c4DMHZj",
   ),
-  // Header: three sections plus search. `also` lists the pages that live
+  // Header: four sections plus search. `also` lists the pages that live
   // under a section, so its link is marked current there too.
   nav: (
     (label: "Blog", href: "/blog/", also: ("/tags/",)),

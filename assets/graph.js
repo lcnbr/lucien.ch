@@ -23,7 +23,8 @@
     if (!nodes.length) return;
     const css = getComputedStyle(document.documentElement);
     const fg = css.getPropertyValue("--fg").trim(), muted = css.getPropertyValue("--muted").trim(),
-      accent = css.getPropertyValue("--accent").trim(), rule = css.getPropertyValue("--rule").trim();
+      accent = css.getPropertyValue("--accent").trim(), rule = css.getPropertyValue("--rule").trim(),
+      sans = css.getPropertyValue("--sans").trim() || "sans-serif";
     const canvas = document.createElement("canvas");
     el.appendChild(canvas);
     const dpr = window.devicePixelRatio || 1;
@@ -58,7 +59,7 @@
         ctx.fillStyle = on ? accent : (n.kind === "post" ? muted : fg);
         ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 2 * Math.PI); ctx.fill();
         if (on || N.length <= 25) {
-          ctx.fillStyle = on ? fg : muted; ctx.font = "12px sans-serif";
+          ctx.fillStyle = on ? fg : muted; ctx.font = "12px " + sans;
           const label = n.title.length > 32 ? n.title.slice(0, 31) + "…" : n.title, tw = ctx.measureText(label).width;
           const lx = n.x + r + 3 + tw > W - 4 ? n.x - r - 3 - tw : n.x + r + 3;
           ctx.fillText(label, lx, n.y + 4);

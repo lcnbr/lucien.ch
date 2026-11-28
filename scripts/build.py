@@ -311,6 +311,9 @@ def build_editor() -> None:
         (vendor / "fonts").mkdir(parents=True, exist_ok=True)
         for f in EDITOR_FONTS:
             shutil.copy(fonts / "dist/files" / f, vendor / "fonts" / f)
+        # The site's own fonts, so diagrams look the same in the preview.
+        for f in (ROOT / "fonts").iterdir():
+            shutil.copy(f, vendor / "fonts" / f.name)
         nt = npm_unpack(f"nanotar@{EDITOR_NPM['nanotar']}", t)
         (vendor / "nanotar").mkdir(exist_ok=True)
         shutil.copy(nt / "dist/index.mjs", vendor / "nanotar/index.mjs")
@@ -419,6 +422,7 @@ def main() -> None:
         shutil.rmtree(DIST)
     cmd = ["typst", "watch" if args.watch else "compile",
            "--features", "html,bundle", "--format", "bundle", "--root", str(ROOT),
+           "--font-path", str(ROOT / "fonts"),
            "--input", f"drafts={'true' if DRAFTS else 'false'}",
            str(ROOT / "site.typ"), str(DIST)]
     subprocess.run(cmd, check=True)

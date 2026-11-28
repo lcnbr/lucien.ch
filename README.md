@@ -68,14 +68,16 @@ personal details are shown is set by `public` at the top of `lib/cv.typ`.
   home, blog, garden and tag pages, `feed.xml` and `garden/graph.json`.
 - `lib/` — templates (`base`, `post`, `note`, `page`, `indexes`) and helpers.
   Every page goes through `shell` in `lib/base.typ`: one header, one page head
-  (trail of links, heading, meta line) and one footer. The header has three
+  (trail of links, heading, meta line) and one footer. The header has four
   sections (Blog, Garden, Research, About); theses live under Research, CV and
   Blogroll under About.
   Both lists are in `lib/config.typ` (`nav`, `more`), so a new page is added
   there, not in the header code.
-- `assets/` — CSS, fonts, `graph.js` (the notes graph) and `hover.js` (hover
+- `assets/` — CSS, fonts, `graph.js` (the notes graph), `hover.js` (hover
   previews of linked pages, equations and figures, plus "+" toggles that unfold a
-  garden note inline). Both have no dependencies.
+  garden note inline) and `mark.js` (the scroll mark: the logo from the CV runs
+  round the edge of the window as the page scrolls, leaving a line behind it).
+  None has dependencies.
 - `scripts/mathml_fix.py` — Chromium sizes stretchy delimiters by their widest
   variant, which makes `f(x)` look like `f ( x )` with New Computer Modern Math.
   The fix marks fences around short content as `stretchy="false"`.
@@ -143,9 +145,20 @@ public, anyone can read a draft's `.typ` file on GitHub.
 
 ## Fonts
 
-`assets/fonts/` holds New Computer Modern (text subset to Latin and Greek) and
-New Computer Modern Math, converted to WOFF2 from the copies shipped with Typst.
-They are distributed under the GUST Font License.
+The site uses two faces and one math font:
+
+- **Literata** for reading text, made for long reading on screens.
+- **STIX Two Math** for equations.
+- **Atkinson Hyperlegible** for headings, navigation and small print, as in
+  the CV PDF.
+
+`assets/fonts/` holds them as WOFF2 for the browser. Literata is subset to
+Latin and Greek. `fonts/` holds Literata and STIX Two Math as TTF/OTF for
+Typst, which draws diagrams, plots and `#svg-math` as SVG with the same fonts
+(see `shell` in `lib/base.typ`). `build.py` passes it with `--font-path`, and
+the editor loads it too. Literata 3.103 and STIX Two 2.13 come from nixpkgs,
+Atkinson Hyperlegible from `cv/fonts/`. All three are under the SIL Open Font
+License 1.1.
 
 ## Editing in the browser
 
